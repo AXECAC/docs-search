@@ -9,3 +9,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.28.1", features = ["extension-module"]}
+thiserror = "2.0.18"
+infer = "0.19.0"
+mime = "0.3.17"
