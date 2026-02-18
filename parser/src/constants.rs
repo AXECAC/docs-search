@@ -16,6 +16,9 @@ pub const APPLICATION_DOCX_ZIP: &str = "application/zip";
 pub const APPLICATION_XLSX: &str =
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
+/// MIME type for XLS (Microsoft Excel)
+pub const APPLICATION_XLS: &str = "application/vnd.ms-excel";
+
 /// MIME type for PPTX (Microsoft `PowerPoint`) presentations
 pub const APPLICATION_PPTX: &str =
     "application/vnd.openxmlformats-officedocument.presentationml.presentation";
