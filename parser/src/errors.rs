@@ -1,5 +1,6 @@
 use std::io;
 
+use pyo3::exceptions::PyValueError;
 use thiserror::Error;
 
 /// Тип для ошибок парсинга
@@ -14,4 +15,11 @@ pub enum ParserError {
     /// Файл с данным расширением не поддерживается
     #[error("Invalid format error: {0}")]
     InvalidFormat(String),
+}
+
+impl From<ParserError> for pyo3::PyErr  {
+    fn from(value: ParserError) -> Self {
+        PyValueError::new_err(value.to_string())
+    }
+
 }
