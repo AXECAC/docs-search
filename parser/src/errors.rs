@@ -12,6 +12,12 @@ pub enum ParserError {
     #[error("IO error: {0}")]
     IoError(#[from] io::Error),
 
+    /// Ошибка чтения docx
+    ///
+    /// Ошибки библиотеки для работы с docx
+    #[error("Docx error: {0}")]
+    DocxError(#[from] docx_rs::ReaderError),
+
     /// Файл с данным расширением не поддерживается
     #[error("Invalid format error: {0}")]
     InvalidFormat(String),
