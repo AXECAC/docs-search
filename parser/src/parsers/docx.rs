@@ -59,8 +59,19 @@ fn drawing_unwrap(drawing: &docx_rs::Drawing) -> Option<String> {
     match &drawing.data {
         // TODO: реализовать после реализации парсинга картинок
         Some(docx_rs::DrawingData::Pic(pic)) => todo!(),
-        Some(docx_rs::DrawingData::TextBox(text_box)) => todo!(),
+        Some(docx_rs::DrawingData::TextBox(text_box)) => Some(text_box_unwrap(text_box)),
         _ => None,
     }
 }
 
+/// Извлекает текст из `TextBox`
+fn text_box_unwrap(text_box: &docx_rs::TextBox) -> String {
+    text_box
+        .children
+        .iter()
+        .filter_map(|from| match from {
+            docx_rs::TextBoxContentChild::Paragraph(paragraph) => Some(paragraph_unwrap(paragraph)),
+            docx_rs::TextBoxContentChild::Table(table) => todo!(),
+        })
+        .collect::<String>()
+}
