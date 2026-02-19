@@ -22,7 +22,7 @@ pub(crate) fn get_from_docx(data: &[u8]) -> Result<String> {
         .iter()
         .filter_map(|from| match from {
             docx_rs::DocumentChild::Paragraph(paragraph) => Some(paragraph_unwrap(paragraph)),
-            docx_rs::DocumentChild::Table(table) => todo!(),
+            docx_rs::DocumentChild::Table(table) => Some(table_unwrap(table)),
             _ => None,
         })
         .collect::<Vec<String>>()
@@ -69,9 +69,43 @@ fn text_box_unwrap(text_box: &docx_rs::TextBox) -> String {
     text_box
         .children
         .iter()
-        .filter_map(|from| match from {
-            docx_rs::TextBoxContentChild::Paragraph(paragraph) => Some(paragraph_unwrap(paragraph)),
-            docx_rs::TextBoxContentChild::Table(table) => todo!(),
+        .map(|from| match from {
+            docx_rs::TextBoxContentChild::Paragraph(paragraph) => paragraph_unwrap(paragraph),
+            docx_rs::TextBoxContentChild::Table(table) => table_unwrap(table),
+        })
+        .collect::<String>()
+}
+
+/// Извлекает текст из `Table`
+fn table_unwrap(table: &docx_rs::Table) -> String {
+    table
+        .rows
+        .iter()
+        .map(|from| match from {
+            docx_rs::TableChild::TableRow(table_row) => table_row_unwrap(table_row),
+        })
+        .collect::<String>()
+}
+
+/// Извлекает текст из `TableRow`
+fn table_row_unwrap(table_row: &docx_rs::TableRow) -> String {
+    table_row
+        .cells
+        .iter()
+        .map(|from_cell| match from_cell {
+            docx_rs::TableRowChild::TableCell(cell) => table_cell_unwrap(cell),
+        })
+        .collect::<String>()
+}
+
+/// Извлекает текст из `TableCell`
+fn table_cell_unwrap(cell: &docx_rs::TableCell) -> String {
+    cell.children
+        .iter()
+        .filter_map(|from_cell_content| match from_cell_content {
+            docx_rs::TableCellContent::Table(table) => Some(table_unwrap(table)),
+            docx_rs::TableCellContent::Paragraph(paragraph) => Some(paragraph_unwrap(paragraph)),
+            _ => None,
         })
         .collect::<String>()
 }
