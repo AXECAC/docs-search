@@ -48,8 +48,19 @@ fn run_unwrap(run: &docx_rs::Run) -> String {
         .iter()
         .filter_map(|from| match from {
             docx_rs::RunChild::Text(text) => Some(text.text.clone()),
-            docx_rs::RunChild::Drawing(drawing) => todo!(),
+            docx_rs::RunChild::Drawing(drawing) => drawing_unwrap(drawing),
             _ => None,
         })
         .collect::<String>()
 }
+
+/// Извлекает текст из `Drawing`, если он есть
+fn drawing_unwrap(drawing: &docx_rs::Drawing) -> Option<String> {
+    match &drawing.data {
+        // TODO: реализовать после реализации парсинга картинок
+        Some(docx_rs::DrawingData::Pic(pic)) => todo!(),
+        Some(docx_rs::DrawingData::TextBox(text_box)) => todo!(),
+        _ => None,
+    }
+}
+
