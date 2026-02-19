@@ -21,12 +21,24 @@ pub(crate) fn get_from_docx(data: &[u8]) -> Result<String> {
         .children
         .iter()
         .filter_map(|from| match from {
-            docx_rs::DocumentChild::Paragraph(paragraph) => todo!(),
+            docx_rs::DocumentChild::Paragraph(paragraph) => Some(paragraph_unwrap(paragraph)),
             docx_rs::DocumentChild::Table(table) => todo!(),
             _ => None,
         })
         .collect::<Vec<String>>()
         .join("\n")
         .to_string())
+}
+
+/// Проходится по всем детям `Paragraph` и извлекает из них текст
+fn paragraph_unwrap(paragraph: &docx_rs::Paragraph) -> String {
+    paragraph
+        .children
+        .iter()
+        .filter_map(|from| -> Option<String> {match from {
+            docx_rs::ParagraphChild::Run(run) => todo!(),
+            _ => None,
+        }})
+        .collect::<String>()
 }
 
