@@ -1,29 +1,29 @@
-#import "conf.typ": conf, intro, conclusion
-#show: conf.with(
-  title: [Вариант 18],
-  type: "referat",
-  info: (
-    author: (
-      name: [Смирнова Егора Ильича],
-      faculty: [КНиИТ],
-      group: "351",
-      sex: "male",
-    ),
-    inspector: (
-      degree: "",
-      name: "",
-    ),
-  ),
-  settings: (
-    title_page: (
-      enabled: true,
-    ),
-    contents_page: (
-      enabled: true,
-    ),
-  ),
-)
-
+// #import "conf.typ": conf, intro, conclusion
+// #show: conf.with(
+//   title: [Вариант 18],
+//   type: "referat",
+//   info: (
+//     author: (
+//       name: [Смирнова Егора Ильича],
+//       faculty: [КНиИТ],
+//       group: "351",
+//       sex: "male",
+//     ),
+//     inspector: (
+//       degree: "",
+//       name: "",
+//     ),
+//   ),
+//   settings: (
+//     title_page: (
+//       enabled: true,
+//     ),
+//     contents_page: (
+//       enabled: true,
+//     ),
+//   ),
+// )
+//
 = КР
 Имеются следующие данные о величине товарооборота для 50 магазинов города
 ($Delta_i$ ---товарооборот, усл. руб.; $n_i$ --- число магазинов)
@@ -38,7 +38,7 @@
 
 == Построить гистограмму и полигон частот
 Гистограмма:
-#image("images/01.png")
+// #image("images/01.png")
 
 #align(center, [
   #table(
@@ -48,7 +48,7 @@
 ])
 
 Полигон:
-#image("images/02.png")
+// #image("images/02.png")
 
 == Записать эмпирическую функцию распределения и построить её график
 
@@ -72,7 +72,7 @@ $
   )
 $
 
-#image("images/03.png")
+// #image("images/03.png")
 
 == Определить числовые характеристики вариационного ряда: $overline(x), S^2, S, accent(sigma, ~)^2, accent(sigma, ~)$
 
