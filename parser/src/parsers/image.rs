@@ -33,6 +33,22 @@ pub(crate) fn get_from_image(data: &[u8]) -> Result<String> {
         .to_str()
         .ok_or_else(|| ParserError::IoTempFileError("".to_string()))?;
 
-    todo!()
+    Ok(parse_with_tesseract(temp_file_path)?.trim_end().to_string())
 }
 
+/// Распознавание текста с помощью Tesseract OCR
+///
+/// # Arguments
+///
+/// - `path` - путь до файла с картинкой
+///
+/// # Returns
+///
+/// - `Ok(String)` - извлеченный текст
+/// - `Err(ParserError)` - если при работе с Tesseract возникает ошибка
+fn parse_with_tesseract(path: &str) -> Result<String> {
+    // Инициализируем Tesseract с Английским и Русским языками
+    let tes = Tesseract::new(None, Some("eng+rus"))?;
+
+    Ok(tes.set_image(path)?.get_text()?)
+}
