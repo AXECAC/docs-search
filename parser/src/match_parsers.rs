@@ -1,15 +1,17 @@
+//! Функции определения MIME и выбора парсера в зависимости от MIME
+
 use std::{str::from_utf8, sync::LazyLock};
 
 use infer::Infer;
-use mime::{Mime, TEXT, TEXT_PLAIN};
+use mime::{IMAGE, Mime, TEXT, TEXT_PLAIN};
 
 use crate::{
     constants::{
-        APPLICATION_DOCX, APPLICATION_DOCX_ZIP, APPLICATION_PDF, APPLICATION_PPTX, APPLICATION_XLS,
+        APPLICATION_DOCX, APPLICATION_DOCX_ZIP, APPLICATION_PDF, APPLICATION_PPTX, APPLICATION_RTF,
         APPLICATION_XLSX,
     },
     errors::ParserError,
-    parsers::docx,
+    parsers::{docx, image::get_from_image},
 };
 
 type Result<T> = std::result::Result<T, ParserError>;
@@ -37,10 +39,11 @@ pub fn get_text(file_name: &str) -> Result<String> {
         {
             docx::get_from_docx(&file_data)
         }
-        Some(mime) if mime == APPLICATION_XLSX || mime == APPLICATION_XLS => todo!(),
+        Some(mime) if mime == APPLICATION_XLSX => todo!(),
         Some(mime) if mime == APPLICATION_PPTX => todo!(),
         Some(mime) if mime == APPLICATION_PDF => todo!(),
         Some(mime) if mime.type_() == TEXT => todo!(),
+        Some(mime) if mime.type_() == IMAGE => get_from_image(&file_data),
         Some(mime) => Err(ParserError::InvalidFormat(format!(
             "Не поддерживается данный тип файла {mime}"
         ))),
@@ -50,6 +53,7 @@ pub fn get_text(file_name: &str) -> Result<String> {
     }
 }
 
+
 /// Определяет MIME файла по считанным данным
 ///
 /// # Arguments
@@ -58,7 +62,7 @@ pub fn get_text(file_name: &str) -> Result<String> {
 /// # Returns
 /// - `Some(mime)` - тип MIME определен
 /// - `None` - тип MIME не был определен
-fn define_mime_type(file_data: &[u8]) -> Option<Mime> {
+pub(crate) fn define_mime_type(file_data: &[u8]) -> Option<Mime> {
     if let Some(kind) = INFER.get(file_data)
         && let Ok(mime) = kind.mime_type().parse()
     {
