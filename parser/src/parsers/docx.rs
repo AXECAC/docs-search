@@ -1,8 +1,8 @@
-//! Парсинг docx файлов. (возможно и тех которые zip, но по факту docx)
+//! Парсинг docx файлов, а так же и тех которые zip, но по факту docx.
 
 use docx_rs::read_docx;
 
-use crate::errors::ParserError;
+use crate::{errors::ParserError, parsers::image::get_from_image};
 
 type Result<T> = std::result::Result<T, ParserError>;
 
@@ -21,8 +21,16 @@ pub(crate) fn get_from_docx(data: &[u8]) -> Result<String> {
         .children
         .iter()
         .filter_map(|from| match from {
-            docx_rs::DocumentChild::Paragraph(paragraph) => Some(paragraph_unwrap(paragraph)),
-            docx_rs::DocumentChild::Table(table) => Some(table_unwrap(table)),
+            docx_rs::DocumentChild::Paragraph(paragraph) => Some({
+                let mut paragraph_text = paragraph_unwrap(paragraph);
+                paragraph_text.push('\n');
+                paragraph_text
+            }),
+            docx_rs::DocumentChild::Table(table) => Some({
+                let mut table_text = table_unwrap(table);
+                table_text.push('\n');
+                table_text
+            }),
             _ => None,
         })
         .collect::<Vec<String>>()
@@ -48,20 +56,24 @@ fn run_unwrap(run: &docx_rs::Run) -> String {
         .iter()
         .filter_map(|from| match from {
             docx_rs::RunChild::Text(text) => Some(text.text.clone()),
-            docx_rs::RunChild::Drawing(drawing) => drawing_unwrap(drawing),
+            docx_rs::RunChild::Drawing(drawing) => drawing_unwrap(drawing).ok()?,
             _ => None,
         })
         .collect::<String>()
 }
 
 /// Извлекает текст из `Drawing`, если он есть
-fn drawing_unwrap(drawing: &docx_rs::Drawing) -> Option<String> {
-    match &drawing.data {
+fn drawing_unwrap(drawing: &docx_rs::Drawing) -> Result<Option<String>> {
+    Ok(match &drawing.data {
         // TODO: реализовать после реализации парсинга картинок
-        Some(docx_rs::DrawingData::Pic(pic)) => todo!(),
+        Some(docx_rs::DrawingData::Pic(pic)) => Some(pic_unwrap(pic)?),
         Some(docx_rs::DrawingData::TextBox(text_box)) => Some(text_box_unwrap(text_box)),
         _ => None,
-    }
+    })
+}
+
+fn pic_unwrap(pic: &docx_rs::Pic) -> Result<String> {
+    todo!()
 }
 
 /// Извлекает текст из `TextBox`
@@ -76,7 +88,7 @@ fn text_box_unwrap(text_box: &docx_rs::TextBox) -> String {
         .collect::<String>()
 }
 
-/// Извлекает текст из `Table`
+/// Проходится по всем детям `Table` и извлекает из них текст
 fn table_unwrap(table: &docx_rs::Table) -> String {
     table
         .rows
@@ -93,7 +105,11 @@ fn table_row_unwrap(table_row: &docx_rs::TableRow) -> String {
         .cells
         .iter()
         .map(|from_cell| match from_cell {
-            docx_rs::TableRowChild::TableCell(cell) => table_cell_unwrap(cell),
+            docx_rs::TableRowChild::TableCell(cell) => {
+                let mut cell_text = table_cell_unwrap(cell);
+                cell_text.push(' ');
+                cell_text
+            }
         })
         .collect::<String>()
 }

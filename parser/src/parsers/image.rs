@@ -1,3 +1,5 @@
+//! Парсинг картинок формата PNG, JPEG и т.д
+
 use crate::errors::ParserError;
 use std::io::Write;
 use tempfile::NamedTempFile;
