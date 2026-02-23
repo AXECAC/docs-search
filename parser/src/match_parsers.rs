@@ -8,7 +8,7 @@ use mime::{IMAGE, Mime, TEXT, TEXT_PLAIN};
 use crate::{
     constants::{
         APPLICATION_DOCX, APPLICATION_DOCX_ZIP, APPLICATION_PDF, APPLICATION_PPTX, APPLICATION_RTF,
-        APPLICATION_XLSX,
+        APPLICATION_XLS, APPLICATION_XLSX,
     },
     errors::ParserError,
     parsers::{docx, image::get_from_image},
@@ -37,7 +37,8 @@ pub fn get_text(file_name: &str) -> Result<String> {
             if mime == APPLICATION_DOCX
                 || (mime == APPLICATION_DOCX_ZIP && file_name.contains(".docx")) =>
         {
-            docx::get_from_docx(&file_data)
+            let mut docx_parser = docx::DocxParser::new();
+            docx_parser.get_from_docx(&file_data)
         }
         Some(mime) if mime == APPLICATION_XLSX => todo!(),
         Some(mime) if mime == APPLICATION_PPTX => todo!(),
@@ -59,7 +60,7 @@ pub fn get_text(file_name: &str) -> Result<String> {
 
 /// Проверка: является ли данный MIME конвертируемым в поддерживаемые MIME
 fn is_converted_mime_type(mime: &Mime) -> bool {
-    *mime == APPLICATION_RTF
+    *mime == APPLICATION_RTF || *mime == APPLICATION_XLS
 }
 
 /// Определяет MIME файла по считанным данным
