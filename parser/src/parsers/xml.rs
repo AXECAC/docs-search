@@ -1,3 +1,6 @@
+//! Модуль парсеров конфигурационных файлов офиса для получения информации о
+//! расположении картинок в docx/pptx/xlsx
+
 use crate::errors::ParserError;
 use quick_xml::Reader;
 use quick_xml::events::Event;
@@ -9,6 +12,15 @@ type Result<T> = std::result::Result<T, ParserError>;
 type Target = String;
 type Id = String;
 
+/// Извлекает мета данные о картинках из конфигурационного файла docx в формате
+/// словаря (target, id)
+///
+/// # Arguments
+/// - `reader` - стрим на xml файл из docx
+///
+/// # Returns
+/// - `Ok(HashMap<Target, Id>)` - возвращает имя словарь (путь до файла, id файла)
+/// - `Err(`[`ParserError::XmlError`]`)` - ошибка во время парсинга конфигурационного файла docx
 pub(crate) fn get_info_from_xml_rels(
     mut reader: Reader<BufReader<ZipFile<'_, Cursor<&[u8]>>>>,
 ) -> Result<HashMap<Target, Id>> {
