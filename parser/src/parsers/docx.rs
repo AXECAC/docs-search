@@ -5,7 +5,11 @@ use crate::{
     parsers::{image::get_from_image, xml::get_info_from_xml_rels},
 };
 use docx_rs::read_docx;
-use std::{collections::HashMap, io::Cursor, path::Path};
+use quick_xml::Reader;
+use std::{
+    collections::HashMap,
+    io::{BufReader, Cursor},
+};
 use zip::ZipArchive;
 
 type Result<T> = std::result::Result<T, ParserError>;
@@ -32,12 +36,13 @@ impl DocxParser {
     ///
     /// # Returns
     /// - `Ok(String)` - возвращает текст
-    /// - `Err(ParserError::DocxError)` - ошибка во время парсинга файла
+    /// - `Err(`[`ParserError::DocxError`]`)` - ошибка во время парсинга файла
     pub(crate) fn get_from_docx(&mut self, data: &[u8]) -> Result<String> {
         let dox = read_docx(data)?;
         // Вытаскиваем все картинки
-
+        let images_bytes = self.extract_images_from_docx(data)?;
         // Парсим текст из картинок
+        self.extract_text_from_images(images_bytes)?;
 
         Ok(dox
             .document
@@ -59,6 +64,83 @@ impl DocxParser {
             .collect::<Vec<String>>()
             .join("\n")
             .to_string())
+    }
+
+    /// Проходится по всем парам
+    ///
+    /// # Arguments
+    /// - `data` - слайс байтов данных docx файла
+    ///
+    /// # Returns
+    /// - `Ok(HashMap<Id, Vec<u8>>)` - возвращает имя словарь (id файла, байты файла)
+    /// - `Err(ParserError)` - ошибка во время парсинга картинки
+    ///
+    /// # Errors
+    /// - [`ParserError::IoTempFileError`] - ошибка во время создания temp файла
+    /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
+    /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
+    fn extract_text_from_images(&mut self, images: HashMap<Id, Vec<u8>>) -> Result<()> {
+        todo!()
+    }
+
+    /// Извлекает все картинки из docx
+    ///
+    /// # Arguments
+    /// - `data` - слайс байтов данных docx файла
+    ///
+    /// # Returns
+    /// - `Ok(HashMap<Id, Vec<u8>>)` - возвращает имя словарь (id файла, байты файла)
+    /// - `Err(ParserError)` - ошибка во время парсинга файла
+    ///
+    /// # Errors
+    /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
+    /// - [`ParserError::XmlError`] - ошибка во время парсинга конфигурационного файла docx
+    fn extract_images_from_docx(&self, data: &[u8]) -> Result<HashMap<Id, Vec<u8>>> {
+        let reader = Cursor::new(data);
+        let mut archive = ZipArchive::new(reader)?;
+
+        let images_info = Self::find_images_info(&mut archive)?;
+
+        if images_info.is_empty() {
+            return Ok(HashMap::new());
+        }
+
+        Self::extract_images(&mut archive, images_info)
+    }
+
+    /// Парсит конфигурационную xml из docx
+    ///
+    /// Проходит по всем файлам и ищет конфигурационную xml. При нахождении парсит
+    /// из нее информацию о картинках.
+    ///
+    /// # Arguments
+    /// - `archive` - docx открытый как [`ZipArchive`]
+    ///
+    /// # Returns
+    /// - `Ok(HashMap<Target, Id>)` - возвращает словарь (путь до файла, id файла)
+    /// - `Err(ParserError)` - ошибка во время парсинга файла
+    ///
+    /// # Errors
+    /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
+    /// - [`ParserError::XmlError`] - ошибка во время парсинга конфигурационного файла docx
+    fn find_images_info(archive: &mut ZipArchive<Cursor<&[u8]>>) -> Result<HashMap<Target, Id>> {
+        todo!()
+    }
+
+    /// Извлекает все картинки из docx
+    ///
+    /// # Arguments
+    /// - `archive` - docx открытый как [`ZipArchive`]
+    /// - `images_info` - словарь из пар пути до файла и id файла
+    ///
+    /// # Returns
+    /// - `Ok(HashMap<Id, Vec<u8>>)` - возвращает словарь (id файла, байты файла)
+    /// - `Err(`[`ParserError::ZipError`]`)` - ошибка во время парсинга файла
+    fn extract_images(
+        archive: &mut ZipArchive<Cursor<&[u8]>>,
+        images_info: HashMap<Target, Id>,
+    ) -> Result<HashMap<Id, Vec<u8>>> {
+        todo!()
     }
 
     // *****************************************************************************
@@ -92,7 +174,6 @@ impl DocxParser {
     /// Извлекает текст из `Drawing`, если он есть
     fn drawing_unwrap(&self, drawing: &docx_rs::Drawing) -> Result<Option<String>> {
         Ok(match &drawing.data {
-            // TODO: реализовать после реализации парсинга картинок
             Some(docx_rs::DrawingData::Pic(pic)) => Some(self.pic_unwrap(pic)?),
             Some(docx_rs::DrawingData::TextBox(text_box)) => Some(self.text_box_unwrap(text_box)),
             _ => None,
@@ -100,9 +181,9 @@ impl DocxParser {
     }
 
     fn pic_unwrap(&self, pic: &docx_rs::Pic) -> Result<String> {
-        match self.images.get(&pic.id){
+        match self.images.get(&pic.id) {
             Some(text) => Ok(text.clone()),
-            None => Ok(String::new())
+            None => Ok(String::new()),
         }
     }
 
