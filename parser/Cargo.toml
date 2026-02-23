@@ -8,12 +8,22 @@ name = "docs_parser"
 crate-type = ["cdylib"]
 
 [dependencies]
+# NOTE: Для компиляции в python модули/функции
 pyo3 = { version = "0.28.1", features = ["extension-module"]}
+
+# NOTE: Для ошибок
 thiserror = "2.0.18"
+
+# NOTE: Для определения MIME документа
 infer = "0.19.0"
 mime = "0.3.17"
+
+# NOTE: Для парсинга форматов офиса
 docx-rs = "0.4.19"
-tempfile = "3.25.0"
-tesseract = "0.15.2"
 zip = "8.1.0"
 quick-xml = "0.39.2"
+
+# NOTE: Для парсинга картинок
+tempfile = "3.25.0"
+tesseract = "0.15.2"
+image = "0.25.9"
