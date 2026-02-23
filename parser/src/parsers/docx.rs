@@ -80,7 +80,11 @@ impl DocxParser {
     /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
     fn extract_text_from_images(&mut self, images: HashMap<Id, Vec<u8>>) -> Result<()> {
-        todo!()
+        self.images = images
+            .into_iter()
+            .map(|(id, data)| Ok((id, get_from_image(&data)?)))
+            .collect::<Result<HashMap<Id, String>>>()?;
+        Ok(())
     }
 
     /// Извлекает все картинки из docx
@@ -129,7 +133,7 @@ impl DocxParser {
         get_info_from_xml_rels(reader)
     }
 
-    /// Извлекает все картинки из docx
+    /// Извлекает все картинки из docx ввиде словаря для дальнейшего парсинга
     ///
     /// # Arguments
     /// - `archive` - docx открытый как [`ZipArchive`]
@@ -261,6 +265,7 @@ impl DocxParser {
             .collect::<String>()
     }
 }
+
 #[cfg(test)]
 mod test {
 
