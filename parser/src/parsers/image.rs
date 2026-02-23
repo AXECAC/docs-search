@@ -1,7 +1,8 @@
 //! Парсинг картинок формата PNG, JPEG и т.д
 
-use crate::errors::ParserError;
-use std::io::Write;
+use crate::{errors::ParserError, match_parsers};
+use mime::{IMAGE_BMP, IMAGE_JPEG, IMAGE_PNG, Mime};
+use std::io::{Cursor, Write};
 use tempfile::NamedTempFile;
 use tesseract::Tesseract;
 
@@ -26,9 +27,14 @@ type Result<T> = std::result::Result<T, ParserError>;
 /// - Используется Tesseract OCR с поддержкой Английского и русского языка
 /// - Создается временный файл для передачи его в Tesseract
 pub(crate) fn get_from_image(data: &[u8]) -> Result<String> {
+    let valid_data = match match_parsers::define_mime_type(data) {
+        Some(mime) if is_correct_img_mime(&mime) => data,
+        _ => &convert_to_png(data)?,
+    };
+
     // Создаем временный файл, для использования в OCR
     let mut temp_file = NamedTempFile::new()?;
-    temp_file.write_all(data)?;
+    temp_file.write_all(valid_data)?;
 
     let temp_file_path = temp_file
         .path()
@@ -36,6 +42,20 @@ pub(crate) fn get_from_image(data: &[u8]) -> Result<String> {
         .ok_or_else(|| ParserError::IoTempFileError("".to_string()))?;
 
     Ok(parse_with_tesseract(temp_file_path)?.trim_end().to_string())
+}
+
+/// Проверка: является ли MIME тип поддерживаемым для парсинга
+fn is_correct_img_mime(mime: &Mime) -> bool {
+    *mime == IMAGE_PNG || *mime == IMAGE_JPEG || *mime == IMAGE_BMP
+}
+
+/// Попытка конвертировать байты катинки в png для дальнейшего парсинга
+fn convert_to_png(data: &[u8]) -> Result<Vec<u8>> {
+    let img = image::load_from_memory(data)?;
+    let mut buf = Cursor::new(Vec::new());
+    img.write_to(&mut buf, image::ImageFormat::Png)?;
+
+    Ok(buf.into_inner())
 }
 
 /// Распознавание текста с помощью Tesseract OCR
