@@ -21,6 +21,12 @@ pub enum ParserError {
     #[error("IO error: {0}")]
     IoTempFileError(String),
 
+    /// Ошибка чтения xml.rels
+    ///
+    /// Ошибки библиотеки для работы с xml
+    #[error("Xml error: {0}")]
+    XmlError(#[from] quick_xml::Error),
+
     /// Ошибка чтения docx/pptx/xlsx как zip
     ///
     /// Ошибки библиотеки для работы с zip
