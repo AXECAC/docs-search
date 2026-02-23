@@ -124,7 +124,9 @@ impl DocxParser {
     /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
     /// - [`ParserError::XmlError`] - ошибка во время парсинга конфигурационного файла docx
     fn find_images_info(archive: &mut ZipArchive<Cursor<&[u8]>>) -> Result<HashMap<Target, Id>> {
-        todo!()
+        let rels_file = archive.by_name("word/_rels/document.xml.rels")?;
+        let reader = Reader::from_reader(BufReader::new(rels_file));
+        get_info_from_xml_rels(reader)
     }
 
     /// Извлекает все картинки из docx
