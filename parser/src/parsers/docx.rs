@@ -142,7 +142,25 @@ impl DocxParser {
         archive: &mut ZipArchive<Cursor<&[u8]>>,
         images_info: HashMap<Target, Id>,
     ) -> Result<HashMap<Id, Vec<u8>>> {
-        todo!()
+        let mut images_with_id = HashMap::new();
+
+        for ind in 0..archive.len() {
+            let mut file = archive.by_index(ind)?;
+            let mut path = file.name();
+            if path.starts_with("word/media/") {
+                path = &path[5..];
+            }
+
+            if (path.starts_with("media/") || path.starts_with("image"))
+                && let Some(id) = images_info.get(path.trim())
+            {
+                let mut buf = Vec::new();
+                std::io::copy(&mut file, &mut buf)?;
+                images_with_id.insert(id.clone(), buf);
+            }
+        }
+
+        Ok(images_with_id)
     }
 
     // *****************************************************************************
