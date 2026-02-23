@@ -19,8 +19,13 @@ type Result<T> = std::result::Result<T, ParserError>;
 ///
 /// # Returns
 ///
-/// - `Ok(String)` - The extracted text from the image
-/// - `Err(ParserError)` - If an error occurs during image processing or OCR
+/// - `Ok(String)` - ивзлеченный текст из картинки
+/// - `Err(ParserError)` - ошибка во время парсинга или обработки картинки
+///
+/// # Errors
+/// - [`ParserError::IoTempFileError`] - ошибка во время создания temp файла
+/// - [`ParserError::ImageError`] - ошибка во время обработки картинки
+/// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
 ///
 /// # Implementation Notes
 ///
