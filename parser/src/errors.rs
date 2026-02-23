@@ -33,6 +33,12 @@ pub enum ParserError {
     #[error("Zip error: {0}")]
     ZipError(#[from] zip::result::ZipError),
 
+    /// Ошибка работы с картинками
+    ///
+    /// Ошибки библиотеки image при конвертации слайса байтов в png
+    #[error("Image error: {0}")]
+    ImageError(#[from] image::ImageError),
+
     /// Ошибка чтения docx
     ///
     /// Ошибки библиотеки для работы с docx
