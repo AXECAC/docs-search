@@ -268,9 +268,9 @@ impl DocxParser {
 
 #[cfg(test)]
 mod test {
+    use crate::{errors::ParserError, parsers::docx::DocxParser};
     use std::io::Cursor;
     use zip::ZipArchive;
-    use crate::{errors::ParserError, parsers::docx::DocxParser};
 
     type Result<T> = std::result::Result<T, ParserError>;
 
@@ -305,7 +305,28 @@ mod test {
     }
 
     #[test]
-    fn extract_media() {}
+    fn extract_media() -> Result<()> {
+        let data = read_data_from_file("assets/text_tables_png.docx")?;
+        let pars = DocxParser::new();
+        let res = pars
+            .extract_images_from_docx(&data)?
+            .iter()
+            .map(|(id, data_vec)| Ok(format!("{id} : {:?};\n", data_vec)))
+            .collect::<Result<Vec<String>>>()?
+            .join("\n");
+
+        assert_eq!(
+            res,
+            match String::from_utf8(read_data_from_file(
+                "assets/tests_results/extract_media.txt"
+            )?) {
+                Ok(str) => str,
+                Err(err) => panic!("{err}"),
+            }
+        );
+
+        Ok(())
+    }
 
     #[test]
     fn extract_text_from_docx() {}
