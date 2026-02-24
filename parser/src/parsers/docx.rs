@@ -268,7 +268,48 @@ impl DocxParser {
 
 #[cfg(test)]
 mod test {
+    use std::io::Cursor;
+    use zip::ZipArchive;
+    use crate::{errors::ParserError, parsers::docx::DocxParser};
+
+    type Result<T> = std::result::Result<T, ParserError>;
+
+    /// Считывает данные из файла ввиде byte vec
+    fn read_data_from_file(file_name: &str) -> Result<Vec<u8>> {
+        Ok(std::fs::read(file_name)?)
+    }
 
     #[test]
-    fn success_extract_media() {}
+    fn extract_xml_info() -> Result<()> {
+        let data = read_data_from_file("assets/text_tables_png.docx")?;
+        let reader = Cursor::new(&data[..]);
+        let mut archive = ZipArchive::new(reader)?;
+
+        let res = DocxParser::find_images_info(&mut archive)?
+            .iter()
+            .map(|(target, id)| format!("{target} : {id};\n"))
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert_eq!(
+            res,
+            match String::from_utf8(read_data_from_file(
+                "assets/tests_results/extract_xml_info.txt"
+            )?) {
+                Ok(str) => str,
+                Err(err) => panic!("{err}"),
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn extract_media() {}
+
+    #[test]
+    fn extract_text_from_docx() {}
+
+    #[test]
+    fn extract_text_from_docx_with_png() {}
 }
