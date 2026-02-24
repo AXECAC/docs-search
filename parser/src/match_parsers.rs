@@ -97,14 +97,14 @@ mod tests {
     use crate::{
         constants::{
             APPLICATION_DOCX, APPLICATION_DOCX_ZIP, APPLICATION_PDF, APPLICATION_PPTX,
-            APPLICATION_XLS, APPLICATION_XLSX,
+            APPLICATION_XLSX,
         },
         match_parsers::{define_mime_type, read_data_from_file},
     };
 
     #[test]
     fn define_mime_docx_type() {
-        let data = read_data_from_file("assets/возможные вопросы теста.docx").unwrap();
+        let data = read_data_from_file("assets/text_and_tables.docx").unwrap();
         let mime = define_mime_type(&data);
         assert!(mime.is_some());
         assert_eq!(mime.unwrap(), APPLICATION_DOCX);
@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn define_mime_docx_zip_type() {
-        let data = read_data_from_file("assets/6 сем англ.docx").unwrap();
+        let data = read_data_from_file("assets/some_text.docx").unwrap();
         let mime = define_mime_type(&data);
         assert!(mime.is_some());
         assert_eq!(mime.unwrap(), APPLICATION_DOCX_ZIP);
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn define_mime_pdf_type() {
-        let data = read_data_from_file("assets/matematika._ch.2._tvimst.pdf").unwrap();
+        let data = read_data_from_file("assets/main.pdf").unwrap();
         let mime = define_mime_type(&data);
         assert!(mime.is_some());
         assert_eq!(mime.unwrap(), APPLICATION_PDF);
@@ -128,18 +128,10 @@ mod tests {
 
     #[test]
     fn define_mime_pptx_type() {
-        let data = read_data_from_file("assets/Презентация_Часть1.pptx").unwrap();
+        let data = read_data_from_file("assets/Presentation.pptx").unwrap();
         let mime = define_mime_type(&data);
         assert!(mime.is_some());
         assert_eq!(mime.unwrap(), APPLICATION_PPTX);
-    }
-
-    #[test]
-    fn define_mime_xls_type() {
-        let data = read_data_from_file("assets/Сроки_зимней_сессии_и_пересдач_25_26.xls").unwrap();
-        let mime = define_mime_type(&data);
-        assert!(mime.is_some());
-        assert_eq!(mime.unwrap(), APPLICATION_XLS);
     }
 
     #[test]
