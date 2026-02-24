@@ -328,9 +328,34 @@ mod test {
         Ok(())
     }
 
-    #[test]
-    fn extract_text_from_docx() {}
+    fn extract_text_from_docx(extract_file: &str, check_file: &str) -> Result<()> {
+        let data = read_data_from_file(extract_file)?;
+        let mut pars = DocxParser::new();
+        let res = pars.get_from_docx(&data)?;
+
+        assert_eq!(
+            res,
+            match String::from_utf8(read_data_from_file(check_file)?) {
+                Ok(str) => str,
+                Err(err) => panic!("{err}"),
+            }
+        );
+        Ok(())
+    }
 
     #[test]
-    fn extract_text_from_docx_with_png() {}
+    fn extract_text_from_docx_without_png() -> Result<()> {
+        extract_text_from_docx(
+            "assets/text_and_tables.docx",
+            "assets/tests_results/extract_text_from_docx_without_png.txt",
+        )
+    }
+
+    #[test]
+    fn extract_text_from_docx_with_png() -> Result<()> {
+        extract_text_from_docx(
+            "assets/text_tables_png.docx",
+            "assets/tests_results/extract_text_from_docx_with_png.txt",
+        )
+    }
 }
