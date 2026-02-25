@@ -267,8 +267,95 @@ impl DocxParser {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
+    use crate::{errors::ParserError, parsers::docx::DocxParser};
+    use std::io::Cursor;
+    use zip::ZipArchive;
+
+    type Result<T> = std::result::Result<T, ParserError>;
+
+    /// Считывает данные из файла ввиде byte vec
+    fn read_data_from_file(file_name: &str) -> Result<Vec<u8>> {
+        Ok(std::fs::read(file_name)?)
+    }
 
     #[test]
-    fn success_extract_media() {}
+    fn extract_xml_info() -> Result<()> {
+        let data = read_data_from_file("assets/text_tables_png.docx")?;
+        let reader = Cursor::new(&data[..]);
+        let mut archive = ZipArchive::new(reader)?;
+
+        let res = DocxParser::find_images_info(&mut archive)?
+            .iter()
+            .map(|(target, id)| format!("{target} : {id};\n"))
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert_eq!(
+            res,
+            match String::from_utf8(read_data_from_file(
+                "assets/tests_results/extract_xml_info.txt"
+            )?) {
+                Ok(str) => str,
+                Err(err) => panic!("{err}"),
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn extract_media() -> Result<()> {
+        let data = read_data_from_file("assets/text_tables_png.docx")?;
+        let pars = DocxParser::new();
+        let res = pars
+            .extract_images_from_docx(&data)?
+            .iter()
+            .map(|(id, data_vec)| Ok(format!("{id} : {:?};\n", data_vec)))
+            .collect::<Result<Vec<String>>>()?
+            .join("\n");
+
+        assert_eq!(
+            res,
+            match String::from_utf8(read_data_from_file(
+                "assets/tests_results/extract_media.txt"
+            )?) {
+                Ok(str) => str,
+                Err(err) => panic!("{err}"),
+            }
+        );
+
+        Ok(())
+    }
+
+    fn extract_text_from_docx(extract_file: &str, check_file: &str) -> Result<()> {
+        let data = read_data_from_file(extract_file)?;
+        let mut pars = DocxParser::new();
+        let res = pars.get_from_docx(&data)?;
+
+        assert_eq!(
+            res,
+            match String::from_utf8(read_data_from_file(check_file)?) {
+                Ok(str) => str,
+                Err(err) => panic!("{err}"),
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn extract_text_from_docx_without_png() -> Result<()> {
+        extract_text_from_docx(
+            "assets/text_and_tables.docx",
+            "assets/tests_results/extract_text_from_docx_without_png.txt",
+        )
+    }
+
+    #[test]
+    fn extract_text_from_docx_with_png() -> Result<()> {
+        extract_text_from_docx(
+            "assets/text_tables_png.docx",
+            "assets/tests_results/extract_text_from_docx_with_png.txt",
+        )
+    }
 }
