@@ -1,5 +1,7 @@
 //! Модуль парсеров конфигурационных файлов офиса для получения информации о
 //! расположении картинок в docx/pptx/xlsx
+//!
+//! Для парсинга используется crate-ы quick_xml и zip
 
 use crate::errors::ParserError;
 use quick_xml::Reader;

@@ -1,4 +1,6 @@
 //! Парсинг картинок формата PNG, JPEG и т.д
+//!
+//! Для парсинга используется crate tesseract
 
 use crate::{errors::ParserError, match_parsers};
 use mime::{IMAGE_BMP, IMAGE_JPEG, IMAGE_PNG, Mime};

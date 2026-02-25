@@ -1,4 +1,6 @@
 //! Парсинг docx файлов, а так же и тех которые zip, но по факту docx.
+//!
+//! Для парсинга используется crate-ы docx_rs и zip
 
 use crate::{
     errors::ParserError,
