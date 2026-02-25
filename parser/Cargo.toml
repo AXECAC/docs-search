@@ -23,6 +23,9 @@ docx-rs = "0.4.19"
 zip = "8.1.0"
 quick-xml = "0.39.2"
 
+# NOTE: Для парсинга pdf
+pdf-extract = "0.10.0"
+
 # NOTE: Для парсинга картинок
 tempfile = "3.25.0"
 tesseract = "0.15.2"
