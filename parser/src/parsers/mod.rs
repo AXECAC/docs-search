@@ -1,4 +1,5 @@
 //! Модуль для реализации парсеров
+mod xml;
 pub(crate) mod docx;
 pub(crate) mod image;
-pub(crate) mod xml;
+pub(crate) mod text;
