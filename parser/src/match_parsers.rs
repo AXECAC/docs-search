@@ -11,7 +11,7 @@ use crate::{
         APPLICATION_XLS, APPLICATION_XLSX,
     },
     errors::ParserError,
-    parsers::{docx, image::get_from_image},
+    parsers::{docx, image::get_from_image, text::get_from_text},
 };
 
 type Result<T> = std::result::Result<T, ParserError>;
@@ -23,19 +23,19 @@ static INFER: LazyLock<Infer> = LazyLock::new(Infer::new);
 /// - `file_name` - название файла, из которого нужно извлечь текст
 ///
 /// # Returns
-/// - `Ok(String)` - возвращает текст
-/// - `Err(ParserError)` - если тип файла не поддерживается, не определен или
+/// - Ok([`String`]) - возвращает текст
+/// - Err([`ParserError`]) - если тип файла не поддерживается, не определен или
 ///   какая-то другая ошибка
 ///
 /// # Errors
-/// - `[ParserError::InvalidFormat]` - тип файла не поддерживается/не определен
-/// - Остальные варианты `[ParserError]`, если ошибка во время парсинга файла
+/// - [`ParserError::InvalidFormat`] - тип файла не поддерживается/не определен
+/// - Остальные варианты [`ParserError`], если ошибка во время парсинга файла
 pub fn get_text(file_name: &str) -> Result<String> {
     let file_data = read_data_from_file(file_name)?;
     match define_mime_type(&file_data) {
         Some(mime)
             if mime == APPLICATION_DOCX
-                || (mime == APPLICATION_DOCX_ZIP && file_name.contains(".docx")) =>
+                || (mime == APPLICATION_DOCX_ZIP && file_name.ends_with(".docx")) =>
         {
             let mut docx_parser = docx::DocxParser::new();
             docx_parser.get_from_docx(&file_data)
@@ -43,7 +43,7 @@ pub fn get_text(file_name: &str) -> Result<String> {
         Some(mime) if mime == APPLICATION_XLSX => todo!(),
         Some(mime) if mime == APPLICATION_PPTX => todo!(),
         Some(mime) if mime == APPLICATION_PDF => todo!(),
-        Some(mime) if mime.type_() == TEXT => todo!(),
+        Some(mime) if mime.type_() == TEXT => get_from_text(&file_data),
         Some(mime) if mime.type_() == IMAGE => get_from_image(&file_data),
         Some(mime) if is_converted_mime_type(&mime) => Err(ParserError::InvalidFormat(format!(
             "Не поддерживается данный тип файла {mime}, но его вы можете конвертировать \
@@ -70,7 +70,7 @@ fn is_converted_mime_type(mime: &Mime) -> bool {
 ///
 /// # Returns
 /// - `Some(mime)` - тип MIME определен
-/// - `None` - тип MIME не был определен
+/// - [`None`] - тип MIME не был определен
 pub(crate) fn define_mime_type(file_data: &[u8]) -> Option<Mime> {
     if let Some(kind) = INFER.get(file_data)
         && let Ok(mime) = kind.mime_type().parse()

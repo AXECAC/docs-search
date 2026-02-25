@@ -1,4 +1,6 @@
 //! Парсинг картинок формата PNG, JPEG и т.д
+//!
+//! Для парсинга используется crate tesseract
 
 use crate::{errors::ParserError, match_parsers};
 use mime::{IMAGE_BMP, IMAGE_JPEG, IMAGE_PNG, Mime};
@@ -19,8 +21,8 @@ type Result<T> = std::result::Result<T, ParserError>;
 ///
 /// # Returns
 ///
-/// - `Ok(String)` - ивзлеченный текст из картинки
-/// - `Err(ParserError)` - ошибка во время парсинга или обработки картинки
+/// - Ok([`String`]) - ивзлеченный текст из картинки
+/// - Err([`ParserError`]) - ошибка во время парсинга или обработки картинки
 ///
 /// # Errors
 /// - [`ParserError::IoTempFileError`] - ошибка во время создания temp файла
@@ -71,8 +73,8 @@ fn convert_to_png(data: &[u8]) -> Result<Vec<u8>> {
 ///
 /// # Returns
 ///
-/// - `Ok(String)` - извлеченный текст
-/// - `Err(ParserError)` - если при работе с Tesseract возникает ошибка
+/// - Ok([`String`]) - извлеченный текст
+/// - Err([`ParserError`]) - если при работе с Tesseract возникает ошибка
 fn parse_with_tesseract(path: &str) -> Result<String> {
     // Инициализируем Tesseract с Английским и Русским языками
     let tes = Tesseract::new(None, Some("eng+rus"))?;
