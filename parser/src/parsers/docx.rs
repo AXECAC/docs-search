@@ -267,7 +267,7 @@ impl DocxParser {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use crate::{errors::ParserError, parsers::docx::DocxParser};
     use std::io::Cursor;
     use zip::ZipArchive;
