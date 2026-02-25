@@ -25,6 +25,12 @@ pub enum ParserError {
     #[error("From utf-8 error: {0}")]
     FromUTF8Error(#[from] std::string::FromUtf8Error),
 
+    /// Ошибка парсинга pdf
+    ///
+    /// Ошибки библиотеки для работы с pdf
+    #[error("Pdf error: {0}")]
+    PdfError(#[from] pdf_extract::OutputError),
+
     /// Ошибка чтения xml.rels
     ///
     /// Ошибки библиотеки для работы с xml
