@@ -18,8 +18,12 @@ pub enum ParserError {
     IoError(#[from] io::Error),
 
     /// Ошибка создания временного файла
-    #[error("IO error: {0}")]
+    #[error("Temp file error: {0}")]
     IoTempFileError(String),
+
+    /// Ошибка парсинга utf-8 из байтов текстового файла
+    #[error("From utf-8 error: {0}")]
+    FromUTF8Error(#[from] std::string::FromUtf8Error),
 
     /// Ошибка чтения xml.rels
     ///
