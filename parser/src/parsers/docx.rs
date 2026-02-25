@@ -31,14 +31,14 @@ impl DocxParser {
         }
     }
 
-    /// Извлекает текстовые данные из параграфов и таблиц (возможно в будующем и из картинок)
+    /// Извлекает текстовые данные из параграфов, таблиц и из картинок из docx файлов
     ///
     /// # Arguments
     /// - `data` - слайс байтов данных из файла
     ///
     /// # Returns
-    /// - `Ok(String)` - возвращает текст
-    /// - `Err(`[`ParserError::DocxError`]`)` - ошибка во время парсинга файла
+    /// - Ok([`String`]) - возвращает текст
+    /// - Err([`ParserError::DocxError`]) - ошибка во время парсинга файла
     pub(crate) fn get_from_docx(&mut self, data: &[u8]) -> Result<String> {
         let dox = read_docx(data)?;
         // Вытаскиваем все картинки
@@ -74,8 +74,8 @@ impl DocxParser {
     /// - `data` - слайс байтов данных docx файла
     ///
     /// # Returns
-    /// - `Ok(HashMap<Id, Vec<u8>>)` - возвращает имя словарь (id файла, байты файла)
-    /// - `Err(ParserError)` - ошибка во время парсинга картинки
+    /// - Ok([`HashMap<Id, Vec<u8>>`]) - возвращает имя словарь (id файла, байты файла)
+    /// - Err([`ParserError`]) - ошибка во время парсинга картинки
     ///
     /// # Errors
     /// - [`ParserError::IoTempFileError`] - ошибка во время создания temp файла
@@ -95,8 +95,8 @@ impl DocxParser {
     /// - `data` - слайс байтов данных docx файла
     ///
     /// # Returns
-    /// - `Ok(HashMap<Id, Vec<u8>>)` - возвращает имя словарь (id файла, байты файла)
-    /// - `Err(ParserError)` - ошибка во время парсинга файла
+    /// - Ok([`HashMap<Id, Vec<u8>>`]) - возвращает имя словарь (id файла, байты файла)
+    /// - Err([`ParserError`]) - ошибка во время парсинга файла
     ///
     /// # Errors
     /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
@@ -123,8 +123,8 @@ impl DocxParser {
     /// - `archive` - docx открытый как [`ZipArchive`]
     ///
     /// # Returns
-    /// - `Ok(HashMap<Target, Id>)` - возвращает словарь (путь до файла, id файла)
-    /// - `Err(ParserError)` - ошибка во время парсинга файла
+    /// - Ok([`HashMap<Target, Id>`]) - возвращает словарь (путь до файла, id файла)
+    /// - Err([`ParserError`]) - ошибка во время парсинга файла
     ///
     /// # Errors
     /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
@@ -142,8 +142,8 @@ impl DocxParser {
     /// - `images_info` - словарь из пар пути до файла и id файла
     ///
     /// # Returns
-    /// - `Ok(HashMap<Id, Vec<u8>>)` - возвращает словарь (id файла, байты файла)
-    /// - `Err(`[`ParserError::ZipError`]`)` - ошибка во время парсинга файла
+    /// - Ok([`HashMap<Id, Vec<u8>>`]) - возвращает словарь (id файла, байты файла)
+    /// - Err([`ParserError::ZipError`]) - ошибка во время парсинга файла
     fn extract_images(
         archive: &mut ZipArchive<Cursor<&[u8]>>,
         images_info: HashMap<Target, Id>,

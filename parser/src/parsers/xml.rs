@@ -21,8 +21,8 @@ type Id = String;
 /// - `reader` - стрим на xml файл из docx
 ///
 /// # Returns
-/// - `Ok(HashMap<Target, Id>)` - возвращает имя словарь (путь до файла, id файла)
-/// - `Err(`[`ParserError::XmlError`]`)` - ошибка во время парсинга конфигурационного файла docx
+/// - Ok([`HashMap<Target, Id>`]) - возвращает имя словарь (путь до файла, id файла)
+/// - Err([`ParserError::XmlError`]) - ошибка во время парсинга конфигурационного файла docx
 pub(crate) fn get_info_from_xml_rels(
     mut reader: Reader<BufReader<ZipFile<'_, Cursor<&[u8]>>>>,
 ) -> Result<HashMap<Target, Id>> {
