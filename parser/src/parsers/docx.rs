@@ -38,7 +38,7 @@ impl DocxParser {
     ///
     /// # Returns
     /// - Ok([`String`]) - возвращает текст
-    /// - Err([`ParserError::DocxError`]) - ошибка во время парсинга файла
+    /// - Err([`ParserError::DocxError`]) - ошибка во время парсинга docx файла
     pub(crate) fn get_from_docx(&mut self, data: &[u8]) -> Result<String> {
         let dox = read_docx(data)?;
         // Вытаскиваем все картинки
