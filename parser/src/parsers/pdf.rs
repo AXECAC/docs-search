@@ -19,3 +19,29 @@ type Result<T> = std::result::Result<T, ParserError>;
 pub(crate) fn get_from_pdf(data: &[u8]) -> Result<String> {
     Ok(extract_text_from_mem(data)?)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{errors::ParserError, parsers::pdf::get_from_pdf};
+
+    type Result<T> = std::result::Result<T, ParserError>;
+
+    /// Считывает данные из файла ввиде byte vec
+    fn read_data_from_file(file_name: &str) -> Result<Vec<u8>> {
+        Ok(std::fs::read(file_name)?)
+    }
+
+    #[test]
+    fn extract_from_pdf_file() -> Result<()> {
+        let data = read_data_from_file("assets/main.pdf")?;
+        let res = get_from_pdf(&data)?;
+
+        assert_eq!(
+            res,
+            String::from_utf8(read_data_from_file(
+                "assets/tests_results/extract_from_pdf_file.txt"
+            )?)?
+        );
+        Ok(())
+    }
+}
