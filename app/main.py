@@ -9,9 +9,9 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
+@app.get("/items/")
+def read_item(source: str):
+    return {source: docs_parser.get_text(source)}
 
 # NOTE: все эти точно работают и работают хорошо
 # print(docs_parser.get_text("parser/assets/text_and_tables.docx"))
