@@ -6,3 +6,4 @@ media/
 word/
 *.xml
 venv
+*__pycache__/
