@@ -33,6 +33,10 @@ pub enum ParserError {
     #[error("Xml error: {0}")]
     XmlError(#[from] quick_xml::Error),
 
+    /// Ошибка работы с аттрибутами в xml
+    #[error("Xml attributes error: {0}")]
+    XmlAttrError(#[from] quick_xml::events::attributes::AttrError),
+
     /// Ошибка чтения docx/pptx/xlsx как zip
     ///
     /// Ошибки библиотеки для работы с zip
