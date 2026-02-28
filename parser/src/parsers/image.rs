@@ -61,3 +61,29 @@ fn parse_with_tesseract(data: &[u8]) -> Result<String> {
 
     Ok(tes.set_image_from_mem(data)?.get_text()?)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{errors::ParserError, parsers::image::get_from_image};
+
+    type Result<T> = std::result::Result<T, ParserError>;
+
+    /// Считывает данные из файла ввиде byte vec
+    fn read_data_from_file(file_name: &str) -> Result<Vec<u8>> {
+        Ok(std::fs::read(file_name)?)
+    }
+
+    #[test]
+    fn extract_from_image() -> Result<()> {
+        let data = read_data_from_file("assets/text_from_img.png")?;
+        let res = get_from_image(&data)?;
+
+        assert_eq!(
+            res,
+            String::from_utf8(read_data_from_file(
+                "assets/tests_results/extract_from_image.txt"
+            )?)?
+        );
+        Ok(())
+    }
+}
