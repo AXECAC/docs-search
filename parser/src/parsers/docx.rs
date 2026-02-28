@@ -80,12 +80,11 @@ impl DocxParser {
     /// - Err([`ParserError`]) - ошибка во время парсинга картинки
     ///
     /// # Errors
-    /// - [`ParserError::IoTempFileError`] - ошибка во время создания temp файла
     /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
     fn extract_text_from_images(&mut self, images: HashMap<Id, Vec<u8>>) -> Result<()> {
         self.images = images
-            .into_iter()
+            .into_par_iter()
             .map(|(id, data)| Ok((id, get_from_image(&data)?)))
             .collect::<Result<HashMap<Id, String>>>()?;
         Ok(())
