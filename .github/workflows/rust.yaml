@@ -51,7 +51,7 @@ jobs:
 
     - name: Build extension
       working-directory: parser
-      run: maturin develop --release
+      run: maturin build --release
 
     - name: Run tests
       working-directory: parser
