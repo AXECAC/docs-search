@@ -26,6 +26,7 @@ jobs:
           llvm-dev \
           libclang-dev \
           libleptonica-dev \
+          libtesseract-dev \
           tesseract-ocr \
           tesseract-ocr-rus \
           tesseract-ocr-eng \
