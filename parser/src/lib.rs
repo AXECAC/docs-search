@@ -6,7 +6,6 @@ mod parsers;
 use pyo3::prelude::*;
 use pyo3::{PyResult, types::PyModule};
 
-
 /// Модуль для реализации функций модуля `docs_parser`
 mod parser {
     use pyo3::prelude::*;
