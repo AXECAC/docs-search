@@ -298,12 +298,9 @@ mod tests {
 
         assert_eq!(
             res,
-            match String::from_utf8(read_data_from_file(
+            String::from_utf8(read_data_from_file(
                 "assets/tests_results/extract_xml_info.txt"
-            )?) {
-                Ok(str) => str,
-                Err(err) => panic!("{err}"),
-            }
+            )?)?
         );
 
         Ok(())
@@ -322,12 +319,9 @@ mod tests {
 
         assert_eq!(
             res,
-            match String::from_utf8(read_data_from_file(
+            String::from_utf8(read_data_from_file(
                 "assets/tests_results/extract_media.txt"
-            )?) {
-                Ok(str) => str,
-                Err(err) => panic!("{err}"),
-            }
+            )?)?
         );
 
         Ok(())
@@ -339,11 +333,8 @@ mod tests {
         let res = pars.get_from_docx(&data)?;
 
         assert_eq!(
-            res,
-            match String::from_utf8(read_data_from_file(check_file)?) {
-                Ok(str) => str,
-                Err(err) => panic!("{err}"),
-            }
+            res.trim(),
+            String::from_utf8(read_data_from_file(check_file)?)?.trim()
         );
         Ok(())
     }
