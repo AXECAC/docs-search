@@ -42,7 +42,7 @@ jobs:
       run: pip3 install maturin
 
     - name: Run clippy
-      run: cargo clippy --release -- -D warnings
+      run: cd parser | cargo clippy --release -- -D warnings
 
     - name: Build extension
       run: maturin develop --release
