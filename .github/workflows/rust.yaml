@@ -37,15 +37,21 @@ jobs:
 
     - name: Cache cargo
       uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: parser
 
     - name: Install maturin
+      working-directory: parser
       run: pip3 install maturin
 
     - name: Run clippy
-      run: cd parser | cargo clippy --release -- -D warnings
+      working-directory: parser
+      run: cargo clippy --release -- -D warnings
 
     - name: Build extension
+      working-directory: parser
       run: maturin develop --release
 
     - name: Run tests
+      working-directory: parser
       run: cargo test --release
