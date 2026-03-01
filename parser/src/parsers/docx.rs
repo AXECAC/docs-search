@@ -6,11 +6,13 @@ use crate::{
     errors::ParserError,
     parsers::{image::get_from_image, xml::get_info_from_xml_rels},
 };
+use rayon::prelude::*;
+
 use docx_rs::read_docx;
 use quick_xml::Reader;
 use std::{
     collections::HashMap,
-    io::{BufReader, Cursor},
+    io::{Cursor, Read},
 };
 use zip::ZipArchive;
 
@@ -78,12 +80,11 @@ impl DocxParser {
     /// - Err([`ParserError`]) - ошибка во время парсинга картинки
     ///
     /// # Errors
-    /// - [`ParserError::IoTempFileError`] - ошибка во время создания temp файла
     /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
     fn extract_text_from_images(&mut self, images: HashMap<Id, Vec<u8>>) -> Result<()> {
         self.images = images
-            .into_iter()
+            .into_par_iter()
             .map(|(id, data)| Ok((id, get_from_image(&data)?)))
             .collect::<Result<HashMap<Id, String>>>()?;
         Ok(())
@@ -127,12 +128,14 @@ impl DocxParser {
     /// - Err([`ParserError`]) - ошибка во время парсинга файла
     ///
     /// # Errors
-    /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
-    /// - [`ParserError::XmlError`] - ошибка во время парсинга конфигурационного файла docx
+    /// - [`ParserError::ZipError`] - ошибка парсинга docx как zip
+    /// - [`ParserError::XmlError`] - ошибка парсинга конфигурационного файла docx
+    /// - [`ParserError::XmlAttrError`] - ошибка работы с аттрибутами в xml
     fn find_images_info(archive: &mut ZipArchive<Cursor<&[u8]>>) -> Result<HashMap<Target, Id>> {
-        let rels_file = archive.by_name("word/_rels/document.xml.rels")?;
-        let reader = Reader::from_reader(BufReader::new(rels_file));
-        get_info_from_xml_rels(reader)
+        let mut rels_file = archive.by_name("word/_rels/document.xml.rels")?;
+        let mut rels = Vec::new();
+        rels_file.read_to_end(&mut rels)?;
+        get_info_from_xml_rels(Reader::from_reader(rels.as_slice()))
     }
 
     /// Извлекает все картинки из docx ввиде словаря для дальнейшего парсинга

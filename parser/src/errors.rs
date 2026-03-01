@@ -17,10 +17,6 @@ pub enum ParserError {
     #[error("IO error: {0}")]
     IoError(#[from] io::Error),
 
-    /// Ошибка создания временного файла
-    #[error("Temp file error: {0}")]
-    IoTempFileError(String),
-
     /// Ошибка парсинга utf-8 из байтов текстового файла
     #[error("From utf-8 error: {0}")]
     FromUTF8Error(#[from] std::string::FromUtf8Error),
@@ -36,6 +32,10 @@ pub enum ParserError {
     /// Ошибки библиотеки для работы с xml
     #[error("Xml error: {0}")]
     XmlError(#[from] quick_xml::Error),
+
+    /// Ошибка работы с аттрибутами в xml
+    #[error("Xml attributes error: {0}")]
+    XmlAttrError(#[from] quick_xml::events::attributes::AttrError),
 
     /// Ошибка чтения docx/pptx/xlsx как zip
     ///
@@ -59,9 +59,9 @@ pub enum ParserError {
     #[error("Tesseract init error: {0}")]
     TesseractInitError(#[from] tesseract::InitializeError),
 
-    /// Ошибка tesseract::SetImageError
-    #[error("Tesseract set image error: {0}")]
-    TesseractSetImgError(#[from] tesseract::SetImageError),
+    /// Ошибка tesseract
+    #[error("Tesseract pixel read from mem error: {0}")]
+    TessPixReadMemError(#[from] tesseract::plumbing::leptonica_plumbing::PixReadMemError),
 
     /// Ошибка tesseract::plumbing::TessBaseApiGetUtf8TextError
     #[error("Tesseract error: {0}")]
