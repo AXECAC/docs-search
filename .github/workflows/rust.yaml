@@ -1,0 +1,51 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          build-essential \
+          pkg-config \
+          clang \
+          llvm-dev \
+          libclang-dev \
+          libleptonica-dev \
+          tesseract-ocr \
+          tesseract-ocr-rus \
+          tesseract-ocr-eng \
+          python3 \
+          python3-pip
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo
+      uses: Swatinem/rust-cache@v2
+
+    - name: Install maturin
+      run: pip3 install maturin
+
+    - name: Run clippy
+      run: cargo clippy --release -- -D warnings
+
+    - name: Build extension
+      run: maturin develop --release
+
+    - name: Run tests
+      run: cargo test --release
