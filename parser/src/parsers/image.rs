@@ -74,15 +74,31 @@ mod tests {
     }
 
     #[test]
-    fn extract_from_image() -> Result<()> {
-        let data = read_data_from_file("assets/text_from_img.png")?;
+    fn extract_from_image_en() -> Result<()> {
+        let data = read_data_from_file("assets/text_from_img_en.png")?;
         let res = get_from_image(&data)?;
 
         assert_eq!(
-            res,
+            res.trim(),
             String::from_utf8(read_data_from_file(
-                "assets/tests_results/extract_from_image.txt"
+                "assets/tests_results/extract_from_image_en.txt"
             )?)?
+            .trim()
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn extract_from_image_ru() -> Result<()> {
+        let data = read_data_from_file("assets/text_from_img_ru.png")?;
+        let res = get_from_image(&data)?;
+
+        assert_eq!(
+            res.trim(),
+            String::from_utf8(read_data_from_file(
+                "assets/tests_results/extract_from_image_ru.txt"
+            )?)?
+            .trim()
         );
         Ok(())
     }
