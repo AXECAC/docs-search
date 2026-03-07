@@ -44,29 +44,11 @@ impl PptxParser {
         let pptx_doc = rustypptx::parse_pptx_bytes(data)?;
 
         let mut result_text = String::new();
-        if let Some(title) = pptx_doc.metadata.title {
+        if let Some(title) = &pptx_doc.metadata.title {
             result_text.push_str(&format!("Название: {title}"));
         }
 
-        for slide in pptx_doc.slides.iter() {
-            self.slides_img_info =
-                slide
-                    .images
-                    .iter()
-                    .enumerate()
-                    .fold(HashMap::new(), |mut info, (ind, img)| {
-                        info.insert((slide.index, ind as u32), img.data.clone());
-                        info
-                    });
-            self.slides_text =
-                slide
-                    .text_elements
-                    .iter()
-                    .fold(HashMap::new(), |mut sl_text, text_element| {
-                        sl_text.insert(slide.index, text_element.text.clone());
-                        sl_text
-                    })
-        }
+        self.set_slides_text_and_img_info(pptx_doc);
 
         result_text = self
             .slides_text
@@ -94,5 +76,27 @@ impl PptxParser {
             .join("\n");
 
         Ok((result_text, self.slides_img_info))
+    }
+
+    fn set_slides_text_and_img_info(&mut self, pptx_doc: rustypptx::PptxDocument) {
+        for slide in pptx_doc.slides.iter() {
+            self.slides_img_info =
+                slide
+                    .images
+                    .iter()
+                    .enumerate()
+                    .fold(HashMap::new(), |mut info, (ind, img)| {
+                        info.insert((slide.index, ind as u32), img.data.clone());
+                        info
+                    });
+            self.slides_text =
+                slide
+                    .text_elements
+                    .iter()
+                    .fold(HashMap::new(), |mut sl_text, text_element| {
+                        sl_text.insert(slide.index, text_element.text.clone());
+                        sl_text
+                    })
+        }
     }
 }
