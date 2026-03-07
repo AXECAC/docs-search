@@ -55,6 +55,12 @@ pub enum ParserError {
     #[error("Docx error: {0}")]
     DocxError(#[from] docx_rs::ReaderError),
 
+    /// Ошибка чтения pptx
+    ///
+    /// Ошибки библиотеки для работы с pptx
+    #[error("Docx error: {0}")]
+    PptxError(#[from] rustypptx::PptxError),
+
     /// Ошибка tesseract::InitializeError
     #[error("Tesseract init error: {0}")]
     TesseractInitError(#[from] tesseract::InitializeError),
