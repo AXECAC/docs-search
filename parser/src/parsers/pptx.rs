@@ -15,7 +15,7 @@ pub(crate) struct PptxParser {
     /// HashMap для сопоставления байтов картинки с её местом в тексте слайда
     pub slides_img_info: ImagesInfo,
     /// HashMap из индекса слайда и текста извлеченного из него
-    pub slides_text: HashMap<SlideIndex, String>,
+    pub slides_text: Vec<String>,
 }
 
 impl PptxParser {
@@ -23,13 +23,14 @@ impl PptxParser {
     pub(crate) fn new() -> Self {
         Self {
             slides_img_info: HashMap::new(),
-            slides_text: HashMap::new(),
+            slides_text: Vec::new(),
         }
     }
 
     /// Извлекает текстовые данные и текст из картинок
     ///
     /// # Arguments
+    /// - `mut `[`self`] - сам парсер (забирает владение над парсером)
     /// - `data` - слайс байтов данных из файла
     ///
     /// # Returns
@@ -66,31 +67,37 @@ impl PptxParser {
                         info.insert((slide.index, ind as u32), img.data.clone());
                         info
                     });
-            self.slides_text =
+            self.slides_text.push(format!(
+                "\n/*****************slide = {} ***************/\n {}\n",
+                slide.index,
                 slide
                     .text_elements
                     .iter()
-                    .fold(HashMap::new(), |mut sl_text, text_element| {
-                        sl_text.insert(slide.index, text_element.text.clone());
+                    .fold(String::new(), |mut sl_text, text_element| {
+                        sl_text.push_str(&text_element.text);
+                        sl_text.push('\n');
                         sl_text
                     })
+            ));
         }
     }
+
     fn add_text_from_img_in_slides(&mut self) -> Result<String> {
         Ok(self
             .slides_text
             .iter_mut()
+            .enumerate()
             .map(|(sl_ind, text)| {
                 text.push_str(
                     &self
                         .slides_img_info
                         .iter()
-                        .filter(|((ind, _), _)| *ind == *sl_ind)
-                        .map(|((_, img_num), data)| {
+                        .filter(|((ind, _), _)| *ind as usize == sl_ind + 1)
+                        .map(|((ind, img_num), data)| {
                             Ok(format!(
-                                "\n/********slide = {sl_ind}; img_num = {img_num}********/\n \
-                                {}\n \
-                                /****************************/",
+                                "\n/********slide = {ind}; img_num = {img_num}********/\n\
+                                {}\n\
+                                /*****************************************************/",
                                 get_from_image(data)?
                             ))
                         })
