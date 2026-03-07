@@ -11,7 +11,7 @@ use crate::{
         APPLICATION_XLS, APPLICATION_XLSX,
     },
     errors::ParserError,
-    parsers::{docx, image::get_from_image, pdf::get_from_pdf, text::get_from_text},
+    parsers::{docx, image::get_from_image, pdf::get_from_pdf, pptx, text::get_from_text},
 };
 
 type Result<T> = std::result::Result<T, ParserError>;
@@ -41,7 +41,11 @@ pub fn get_text(file_name: &str) -> Result<String> {
             docx_parser.get_from_docx(&file_data)
         }
         Some(mime) if mime == APPLICATION_XLSX => todo!(),
-        Some(mime) if mime == APPLICATION_PPTX => todo!(),
+        Some(mime) if mime == APPLICATION_PPTX => {
+            let pptx_parser = pptx::PptxParser::new();
+            let (res, _) = pptx_parser.get_from_pptx(&file_data)?;
+            Ok(res)
+        }
         Some(mime) if mime == APPLICATION_PDF => get_from_pdf(&file_data),
         Some(mime) if mime.type_() == TEXT => get_from_text(&file_data),
         Some(mime) if mime.type_() == IMAGE => get_from_image(&file_data),
