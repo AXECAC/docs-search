@@ -4,6 +4,8 @@
 
 use std::collections::HashMap;
 
+use rayon::prelude::*;
+
 use crate::{errors::ParserError, parsers::image::get_from_image};
 
 type Result<T> = std::result::Result<T, ParserError>;
@@ -14,7 +16,7 @@ type ImagesInfo = HashMap<(SlideIndex, ImgOnSlideNum), Vec<u8>>;
 pub(crate) struct PptxParser {
     /// HashMap для сопоставления байтов картинки с её местом в тексте слайда
     pub slides_img_info: ImagesInfo,
-    /// HashMap из индекса слайда и текста извлеченного из него
+    /// Текст слайда (индекс слайда на 1 больше индекса в slides_text)
     pub slides_text: Vec<String>,
 }
 
@@ -85,26 +87,25 @@ impl PptxParser {
     fn add_text_from_img_in_slides(&mut self) -> Result<String> {
         Ok(self
             .slides_text
-            .iter_mut()
+            .par_iter()
             .enumerate()
             .map(|(sl_ind, text)| {
-                text.push_str(
-                    &self
-                        .slides_img_info
-                        .iter()
-                        .filter(|((ind, _), _)| *ind as usize == sl_ind + 1)
-                        .map(|((ind, img_num), data)| {
-                            Ok(format!(
-                                "\n/********slide = {ind}; img_num = {img_num}********/\n\
-                                {}\n\
-                                /*****************************************************/",
-                                get_from_image(data)?
-                            ))
-                        })
-                        .collect::<Result<Vec<_>>>()?
-                        .join("\n"),
-                );
-                Ok(text.clone())
+                let mut res_slide_text = String::from(text);
+
+                for ((ind, img_num), data) in self
+                    .slides_img_info
+                    .iter()
+                    .filter(|((ind, _), _)| *ind as usize == sl_ind + 1)
+                {
+                    res_slide_text.push_str(&format!(
+                        "\n/********slide = {ind}; img_num = {img_num}********/\n"
+                    ));
+
+                    res_slide_text.push_str(&get_from_image(data)?);
+                    res_slide_text
+                        .push_str("\n/*****************************************************/");
+                }
+                Ok(res_slide_text)
             })
             .collect::<Result<Vec<_>>>()?
             .join("\n"))
