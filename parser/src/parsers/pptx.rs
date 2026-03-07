@@ -18,3 +18,13 @@ pub(crate) struct PptxParser {
     pub slides_text: HashMap<SlideIndex, String>,
 }
 
+impl PptxParser {
+    /// Создает новый [`PptxParser`].
+    pub(crate) fn new() -> Self {
+        Self {
+            slides_img_info: HashMap::new(),
+            slides_text: HashMap::new(),
+        }
+    }
+
+}
