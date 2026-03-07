@@ -7,4 +7,5 @@ import docs_parser
 # print(docs_parser.get_text("parser/assets/text_from_img.png"))
 # print(docs_parser.get_text("parser/assets/main.typ"))
 # print(docs_parser.get_text("parser/assets/main.pdf"))
-print(docs_parser.get_text("parser/assets/too_many_png.docx"))
+# print(docs_parser.get_text("parser/assets/too_many_png.docx"))
+print(docs_parser.get_text("parser/assets/Presentation.pptx"))
