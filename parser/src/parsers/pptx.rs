@@ -50,30 +50,7 @@ impl PptxParser {
 
         self.set_slides_text_and_img_info(pptx_doc);
 
-        result_text = self
-            .slides_text
-            .iter_mut()
-            .map(|(sl_ind, text)| {
-                text.push_str(
-                    &self
-                        .slides_img_info
-                        .iter()
-                        .filter(|((ind, _), _)| *ind == *sl_ind)
-                        .map(|((_, img_num), data)| {
-                            Ok(format!(
-                                "\n/********slide = {sl_ind}; img_num = {img_num}********/\n \
-                                {}\n \
-                                /****************************/",
-                                get_from_image(data)?
-                            ))
-                        })
-                        .collect::<Result<Vec<_>>>()?
-                        .join("\n"),
-                );
-                Ok(text.clone())
-            })
-            .collect::<Result<Vec<_>>>()?
-            .join("\n");
+        result_text = self.add_text_from_img_in_slides()?;
 
         Ok((result_text, self.slides_img_info))
     }
@@ -98,5 +75,31 @@ impl PptxParser {
                         sl_text
                     })
         }
+    }
+    fn add_text_from_img_in_slides(&mut self) -> Result<String> {
+        Ok(self
+            .slides_text
+            .iter_mut()
+            .map(|(sl_ind, text)| {
+                text.push_str(
+                    &self
+                        .slides_img_info
+                        .iter()
+                        .filter(|((ind, _), _)| *ind == *sl_ind)
+                        .map(|((_, img_num), data)| {
+                            Ok(format!(
+                                "\n/********slide = {sl_ind}; img_num = {img_num}********/\n \
+                                {}\n \
+                                /****************************/",
+                                get_from_image(data)?
+                            ))
+                        })
+                        .collect::<Result<Vec<_>>>()?
+                        .join("\n"),
+                );
+                Ok(text.clone())
+            })
+            .collect::<Result<Vec<_>>>()?
+            .join("\n"))
     }
 }
