@@ -60,15 +60,11 @@ impl PptxParser {
 
     fn set_slides_text_and_img_info(&mut self, pptx_doc: rustypptx::PptxDocument) {
         for slide in pptx_doc.slides.iter() {
-            self.slides_img_info =
-                slide
-                    .images
-                    .iter()
-                    .enumerate()
-                    .fold(HashMap::new(), |mut info, (ind, img)| {
-                        info.insert((slide.index, ind as u32), img.data.clone());
-                        info
-                    });
+            for (ind, img) in slide.images.iter().enumerate() {
+                self.slides_img_info
+                    .insert((slide.index, ind as u32), img.data.clone());
+            }
+
             self.slides_text.push(format!(
                 "\n/*****************slide = {} ***************/\n {}\n",
                 slide.index,
