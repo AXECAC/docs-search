@@ -90,7 +90,7 @@ pub(crate) fn define_mime_type(file_data: &[u8]) -> Option<Mime> {
 }
 
 /// Считывает данные из файла ввиде byte vec
-fn read_data_from_file(file_name: &str) -> Result<Vec<u8>> {
+pub(crate) fn read_data_from_file(file_name: &str) -> Result<Vec<u8>> {
     Ok(std::fs::read(file_name)?)
 }
 

@@ -17,11 +17,13 @@ mod parser {
         Ok(crate::match_parsers::get_text(from_path)?)
     }
 
-    /// Парсинг текста `from` файла по `path`
+    /// Конвертер старых Microsoft office форматов в новые
     #[pyo3::pyfunction]
-    pub fn convert_to_new_format(old_file_path: &str, new_path: &str) -> PyResult<String> {
-        // Ok(crate::match_parsers::get_text(from_path)?)
-        todo!()
+    pub fn convert_to_new_format(old_file_path: &str, new_path: &str) -> PyResult<()> {
+        Ok(crate::converter::convert_to_new_format(
+            old_file_path,
+            new_path,
+        )?)
     }
 }
 
