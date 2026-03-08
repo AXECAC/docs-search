@@ -25,8 +25,10 @@ pub(crate) struct DocxParser {
     pub images: HashMap<Id, String>,
 }
 
+// FIX: переделать под выдачу и текста и картинки с метакми в тексте (типа этот текст из картинки
+// такой-то)
 impl DocxParser {
-    /// Creates a new [`DocxParser`].
+    /// Создает новый [`DocxParser`].
     pub(crate) fn new() -> Self {
         Self {
             images: HashMap::new(),
@@ -40,7 +42,14 @@ impl DocxParser {
     ///
     /// # Returns
     /// - Ok([`String`]) - возвращает текст
-    /// - Err([`ParserError::DocxError`]) - ошибка во время парсинга docx файла
+    /// - Err([`ParserError`]) - ошибка во время парсинга docx файла
+    ///
+    /// # Errors
+    /// - [`ParserError::DocxError`] - ошибка во время docx
+    /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
+    /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
+    /// - [`ParserError::XmlError`] - ошибка во время парсинга конфигурационного файла docx
+    /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
     pub(crate) fn get_from_docx(&mut self, data: &[u8]) -> Result<String> {
         let dox = read_docx(data)?;
         // Вытаскиваем все картинки
@@ -172,11 +181,11 @@ impl DocxParser {
         Ok(images_with_id)
     }
 
-    // *****************************************************************************
+    // *************************************************************************
     // Работа с элементами docx
-    // *****************************************************************************
+    // *************************************************************************
 
-    /// Проходится по всем детям `Paragraph` и извлекает из них текст
+    /// Проходится по всем детям [`docx_rs::Paragraph`] и извлекает из них текст
     fn paragraph_unwrap(&self, paragraph: &docx_rs::Paragraph) -> String {
         paragraph
             .children
@@ -188,7 +197,7 @@ impl DocxParser {
             .collect::<String>()
     }
 
-    /// Проходится по всем детям `Run` и извлекает из них текст
+    /// Проходится по всем детям [`docx_rs::Run`] и извлекает из них текст
     fn run_unwrap(&self, run: &docx_rs::Run) -> String {
         run.children
             .iter()
@@ -200,7 +209,7 @@ impl DocxParser {
             .collect::<String>()
     }
 
-    /// Извлекает текст из `Drawing`, если он есть
+    /// Извлекает текст из [`docx_rs::Drawing`], если он есть
     fn drawing_unwrap(&self, drawing: &docx_rs::Drawing) -> Result<Option<String>> {
         Ok(match &drawing.data {
             Some(docx_rs::DrawingData::Pic(pic)) => Some(self.pic_unwrap(pic)?),
@@ -209,6 +218,7 @@ impl DocxParser {
         })
     }
 
+    /// Подставляет текст с нужной картинки вместо [`docx_rs::Pic`]
     fn pic_unwrap(&self, pic: &docx_rs::Pic) -> Result<String> {
         match self.images.get(&pic.id) {
             Some(text) => Ok(text.clone()),
@@ -216,7 +226,7 @@ impl DocxParser {
         }
     }
 
-    /// Извлекает текст из `TextBox`
+    /// Извлекает текст из [`docx_rs::TextBox`]
     fn text_box_unwrap(&self, text_box: &docx_rs::TextBox) -> String {
         text_box
             .children
@@ -230,7 +240,7 @@ impl DocxParser {
             .collect::<String>()
     }
 
-    /// Проходится по всем детям `Table` и извлекает из них текст
+    /// Проходится по всем детям [`docx_rs::Table`] и извлекает из них текст
     fn table_unwrap(&self, table: &docx_rs::Table) -> String {
         table
             .rows
@@ -241,7 +251,7 @@ impl DocxParser {
             .collect::<String>()
     }
 
-    /// Извлекает текст из `TableRow`
+    /// Извлекает текст из [`docx_rs::TableRow`]
     fn table_row_unwrap(&self, table_row: &docx_rs::TableRow) -> String {
         table_row
             .cells
@@ -256,7 +266,7 @@ impl DocxParser {
             .collect::<String>()
     }
 
-    /// Извлекает текст из `TableCell`
+    /// Извлекает текст из [`docx_rs::TableCell`]
     fn table_cell_unwrap(&self, cell: &docx_rs::TableCell) -> String {
         cell.children
             .iter()
