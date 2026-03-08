@@ -45,19 +45,20 @@ impl PptxParser {
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
     pub(crate) fn get_from_pptx(mut self, data: &[u8]) -> Result<(String, ImagesInfo)> {
         let pptx_doc = rustypptx::parse_pptx_bytes(data)?;
-
         let mut result_text = String::new();
+
         if let Some(title) = &pptx_doc.metadata.title {
             result_text.push_str(&format!("Название: {title}"));
         }
 
         self.set_slides_text_and_img_info(pptx_doc);
-
         result_text = self.add_text_from_img_in_slides()?;
 
         Ok((result_text, self.slides_img_info))
     }
 
+    /// Заполняет текущий парсер данными из pptx файла для дальнейшей обработки
+    /// (текст и картинки со слайдов)
     fn set_slides_text_and_img_info(&mut self, pptx_doc: rustypptx::PptxDocument) {
         for slide in pptx_doc.slides.iter() {
             for (ind, img) in slide.images.iter().enumerate() {
@@ -80,6 +81,16 @@ impl PptxParser {
         }
     }
 
+    /// Собирает текст из всех слайдов в единый текст, извлекая и подставляя
+    /// текст из картинок сладов в нужные места
+    ///
+    /// # Returns
+    /// - Ok([`String`]) - возвращает текст всех слайдов
+    /// - Err([`ParserError`]) - ошибка во время парсинга pptx файла
+    ///
+    /// # Errors
+    /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
+    /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
     fn add_text_from_img_in_slides(&mut self) -> Result<String> {
         Ok(self
             .slides_text
