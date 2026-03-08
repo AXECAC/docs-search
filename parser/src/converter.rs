@@ -10,6 +10,16 @@ use crate::{
 
 type Result<T> = std::result::Result<T, ParserError>;
 
+/// Перечисление старых форматов Microsoft office
+enum MSOfficeFormat {
+    /// doc like форматы
+    Doc,
+    /// xls like форматы
+    Xls,
+    /// ppt like форматы
+    Ppt,
+}
+
 /// Конвертер старых Microsoft office форматов в новые
 /// # Arguments
 /// - `old_file_path` - путь по которому лежит файл старого формата
