@@ -8,4 +8,7 @@ import docs_parser
 # print(docs_parser.get_text("parser/assets/main.typ"))
 # print(docs_parser.get_text("parser/assets/main.pdf"))
 # print(docs_parser.get_text("parser/assets/too_many_png.docx"))
-print(docs_parser.get_text("parser/assets/Presentation.pptx"))
+# print(docs_parser.get_text("parser/assets/Presentation.pptx"))
+docs_parser.convert_to_new_format("parser/assets/old_docs.doc", "parser/assets/tests_results")
+docs_parser.convert_to_new_format("parser/assets/old_pres.ppt", "parser/assets/tests_results")
+docs_parser.convert_to_new_format("parser/assets/old_exel.xls", "parser/assets/tests_results")
