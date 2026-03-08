@@ -118,3 +118,43 @@ impl PptxParser {
             .join("\n"))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{errors::ParserError, parsers::pptx::PptxParser};
+
+    type Result<T> = std::result::Result<T, ParserError>;
+
+    /// Считывает данные из файла ввиде byte vec
+    fn read_data_from_file(file_name: &str) -> Result<Vec<u8>> {
+        Ok(std::fs::read(file_name)?)
+    }
+
+    fn extract_text_from_pptx(extract_file: &str, check_file: &str) -> Result<()> {
+        let data = read_data_from_file(extract_file)?;
+        let pars = PptxParser::new();
+        let (res, _) = pars.get_from_pptx(&data)?;
+
+        assert_eq!(
+            res.trim(),
+            String::from_utf8(read_data_from_file(check_file)?)?.trim()
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn extract_text_from_pptx_without_png() -> Result<()> {
+        extract_text_from_pptx(
+            "assets/pres_without_png.pptx",
+            "assets/tests_results/extract_text_from_pptx_without_png.txt",
+        )
+    }
+
+    #[test]
+    fn extract_text_from_pptx_with_png() -> Result<()> {
+        extract_text_from_pptx(
+            "assets/pres_with_png.pptx",
+            "assets/tests_results/extract_text_from_pptx_with_png.txt",
+        )
+    }
+}
