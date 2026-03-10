@@ -30,8 +30,6 @@ pub(crate) struct DocxParser {
     cur_img_ind: ImgNumber,
 }
 
-// FIX: переделать под выдачу и текста и картинки с метакми в тексте (типа этот текст из картинки
-// такой-то)
 impl DocxParser {
     /// Создает новый [`DocxParser`].
     pub(crate) fn new() -> Self {
