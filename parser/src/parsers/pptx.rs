@@ -67,7 +67,7 @@ impl PptxParser {
             }
 
             self.slides_text.push(format!(
-                "\n/*****************slide = {} ***************/\n {}\n",
+                "\n/********************slide = {}********************/\n {}\n",
                 slide.index,
                 slide
                     .text_elements
@@ -110,7 +110,7 @@ impl PptxParser {
 
                     res_slide_text.push_str(&get_from_image(data)?);
                     res_slide_text
-                        .push_str("\n/*****************************************************/");
+                        .push_str("\n/**************************************************/\n");
                 }
                 Ok(res_slide_text)
             })

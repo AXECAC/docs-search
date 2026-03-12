@@ -19,19 +19,25 @@ use zip::ZipArchive;
 type Result<T> = std::result::Result<T, ParserError>;
 type Id = String;
 type Target = String;
+type ImgNumber = u32;
+type ImagesInfo = HashMap<(u32, ImgNumber), Vec<u8>>;
 
 pub(crate) struct DocxParser {
     /// HashMap, где хранятся id картинок и текст извлеченный из них
     pub images: HashMap<Id, String>,
+    pub img_info: ImagesInfo,
+    temp_img_info: HashMap<Id, Vec<u8>>,
+    cur_img_ind: ImgNumber,
 }
 
-// FIX: переделать под выдачу и текста и картинки с метакми в тексте (типа этот текст из картинки
-// такой-то)
 impl DocxParser {
     /// Создает новый [`DocxParser`].
     pub(crate) fn new() -> Self {
         Self {
             images: HashMap::new(),
+            img_info: HashMap::new(),
+            temp_img_info: HashMap::new(),
+            cur_img_ind: 0,
         }
     }
 
@@ -50,33 +56,35 @@ impl DocxParser {
     /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
     /// - [`ParserError::XmlError`] - ошибка во время парсинга конфигурационного файла docx
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
-    pub(crate) fn get_from_docx(&mut self, data: &[u8]) -> Result<String> {
+    pub(crate) fn get_from_docx(mut self, data: &[u8]) -> Result<(String, ImagesInfo)> {
         let dox = read_docx(data)?;
         // Вытаскиваем все картинки
         let images_bytes = self.extract_images_from_docx(data)?;
         // Парсим текст из картинок
         self.extract_text_from_images(images_bytes)?;
 
-        Ok(dox
-            .document
-            .children
-            .iter()
-            .filter_map(|from| match from {
-                docx_rs::DocumentChild::Paragraph(paragraph) => Some({
-                    let mut paragraph_text = self.paragraph_unwrap(paragraph);
-                    paragraph_text.push('\n');
-                    paragraph_text
-                }),
-                docx_rs::DocumentChild::Table(table) => Some({
-                    let mut table_text = self.table_unwrap(table);
-                    table_text.push('\n');
-                    table_text
-                }),
-                _ => None,
-            })
-            .collect::<Vec<String>>()
-            .join("\n")
-            .to_string())
+        Ok((
+            dox.document
+                .children
+                .iter()
+                .filter_map(|from| match from {
+                    docx_rs::DocumentChild::Paragraph(paragraph) => Some({
+                        let mut paragraph_text = self.paragraph_unwrap(paragraph);
+                        paragraph_text.push('\n');
+                        paragraph_text
+                    }),
+                    docx_rs::DocumentChild::Table(table) => Some({
+                        let mut table_text = self.table_unwrap(table);
+                        table_text.push('\n');
+                        table_text
+                    }),
+                    _ => None,
+                })
+                .collect::<Vec<String>>()
+                .join("\n")
+                .to_string(),
+            self.img_info,
+        ))
     }
 
     /// Проходится по всем парам
@@ -92,6 +100,7 @@ impl DocxParser {
     /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
     fn extract_text_from_images(&mut self, images: HashMap<Id, Vec<u8>>) -> Result<()> {
+        self.temp_img_info = images.clone();
         self.images = images
             .into_par_iter()
             .map(|(id, data)| Ok((id, get_from_image(&data)?)))
@@ -186,7 +195,7 @@ impl DocxParser {
     // *************************************************************************
 
     /// Проходится по всем детям [`docx_rs::Paragraph`] и извлекает из них текст
-    fn paragraph_unwrap(&self, paragraph: &docx_rs::Paragraph) -> String {
+    fn paragraph_unwrap(&mut self, paragraph: &docx_rs::Paragraph) -> String {
         paragraph
             .children
             .iter()
@@ -198,7 +207,7 @@ impl DocxParser {
     }
 
     /// Проходится по всем детям [`docx_rs::Run`] и извлекает из них текст
-    fn run_unwrap(&self, run: &docx_rs::Run) -> String {
+    fn run_unwrap(&mut self, run: &docx_rs::Run) -> String {
         run.children
             .iter()
             .filter_map(|from| match from {
@@ -210,7 +219,7 @@ impl DocxParser {
     }
 
     /// Извлекает текст из [`docx_rs::Drawing`], если он есть
-    fn drawing_unwrap(&self, drawing: &docx_rs::Drawing) -> Result<Option<String>> {
+    fn drawing_unwrap(&mut self, drawing: &docx_rs::Drawing) -> Result<Option<String>> {
         Ok(match &drawing.data {
             Some(docx_rs::DrawingData::Pic(pic)) => Some(self.pic_unwrap(pic)?),
             Some(docx_rs::DrawingData::TextBox(text_box)) => Some(self.text_box_unwrap(text_box)),
@@ -219,15 +228,30 @@ impl DocxParser {
     }
 
     /// Подставляет текст с нужной картинки вместо [`docx_rs::Pic`]
-    fn pic_unwrap(&self, pic: &docx_rs::Pic) -> Result<String> {
+    fn pic_unwrap(&mut self, pic: &docx_rs::Pic) -> Result<String> {
         match self.images.get(&pic.id) {
-            Some(text) => Ok(text.clone()),
+            Some(text) => {
+                let data = self
+                    .temp_img_info
+                    .remove(&pic.id)
+                    .expect("Байты картинки обязаны существовать в момент работы с картинкой");
+                let num = self.cur_img_ind;
+
+                self.img_info.insert((0, num), data);
+                self.cur_img_ind += 1;
+
+                Ok(format!(
+                    "\n/************Image = {num}************/\n \
+                    {text} \
+                    \n/*************************************/\n",
+                ))
+            }
             None => Ok(String::new()),
         }
     }
 
     /// Извлекает текст из [`docx_rs::TextBox`]
-    fn text_box_unwrap(&self, text_box: &docx_rs::TextBox) -> String {
+    fn text_box_unwrap(&mut self, text_box: &docx_rs::TextBox) -> String {
         text_box
             .children
             .iter()
@@ -241,7 +265,7 @@ impl DocxParser {
     }
 
     /// Проходится по всем детям [`docx_rs::Table`] и извлекает из них текст
-    fn table_unwrap(&self, table: &docx_rs::Table) -> String {
+    fn table_unwrap(&mut self, table: &docx_rs::Table) -> String {
         table
             .rows
             .iter()
@@ -252,7 +276,7 @@ impl DocxParser {
     }
 
     /// Извлекает текст из [`docx_rs::TableRow`]
-    fn table_row_unwrap(&self, table_row: &docx_rs::TableRow) -> String {
+    fn table_row_unwrap(&mut self, table_row: &docx_rs::TableRow) -> String {
         table_row
             .cells
             .iter()
@@ -267,7 +291,7 @@ impl DocxParser {
     }
 
     /// Извлекает текст из [`docx_rs::TableCell`]
-    fn table_cell_unwrap(&self, cell: &docx_rs::TableCell) -> String {
+    fn table_cell_unwrap(&mut self, cell: &docx_rs::TableCell) -> String {
         cell.children
             .iter()
             .filter_map(|from_cell_content| match from_cell_content {
@@ -339,8 +363,8 @@ mod tests {
 
     fn extract_text_from_docx(extract_file: &str, check_file: &str) -> Result<()> {
         let data = read_data_from_file(extract_file)?;
-        let mut pars = DocxParser::new();
-        let res = pars.get_from_docx(&data)?;
+        let pars = DocxParser::new();
+        let (res, _) = pars.get_from_docx(&data)?;
 
         assert_eq!(
             res.trim(),

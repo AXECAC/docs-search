@@ -9,11 +9,15 @@ use pyo3::{PyResult, types::PyModule};
 
 /// Модуль для реализации функций модуля `docs_parser`
 mod parser {
+    use std::collections::HashMap;
+
     use pyo3::prelude::*;
+    type ImgNumber = u32;
+    type ImagesInfo = HashMap<(u32, ImgNumber), Vec<u8>>;
 
     /// Парсинг текста `from` файла по `path`
     #[pyo3::pyfunction]
-    pub fn get_text(from_path: &str) -> PyResult<String> {
+    pub fn get_text(from_path: &str) -> PyResult<(String, ImagesInfo)> {
         Ok(crate::match_parsers::get_text(from_path)?)
     }
 
