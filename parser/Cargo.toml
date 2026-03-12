@@ -21,6 +21,7 @@ mime = "0.3.17"
 # NOTE: Для парсинга форматов офиса
 docx-rs = "0.4.19"
 rustypptx = "0.2.0"
+calamine = "0.34.0"
 zip = "8.1.0"
 quick-xml = "0.38.4"
 
