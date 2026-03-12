@@ -238,6 +238,7 @@ impl DocxParser {
                 let num = self.cur_img_ind;
 
                 self.img_info.insert((0, num), data);
+                self.cur_img_ind += 1;
 
                 Ok(format!(
                     "\n/************Image = {num}************/\n \
