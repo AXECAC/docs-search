@@ -235,8 +235,15 @@ impl DocxParser {
                     .temp_img_info
                     .remove(&pic.id)
                     .expect("Байты картинки обязаны существовать в момент работы с картинкой");
-                self.img_info.insert((0, self.cur_img_ind), data);
-                Ok(text.clone())
+                let num = self.cur_img_ind;
+
+                self.img_info.insert((0, num), data);
+
+                Ok(format!(
+                    "\n/************Image = {num}************/\n \
+                    {text} \
+                    \n/*************************************/\n",
+                ))
             }
             None => Ok(String::new()),
         }
