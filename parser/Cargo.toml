@@ -22,7 +22,7 @@ mime = "0.3.17"
 docx-rs = "0.4.19"
 rustypptx = "0.2.0"
 zip = "8.1.0"
-quick-xml = "0.39.2"
+quick-xml = "0.38.4"
 
 # NOTE: Для парсинга pdf
 pdf-extract = "0.10.0"
