@@ -1,6 +1,8 @@
-//! Парсинг docx файлов, а так же и тех которые zip, но по факту docx.
+//! Модуль для парсинга docx файлов.
 //!
-//! Для парсинга используется crate-ы docx_rs и zip
+//! Текст извлекается как из обычных docx, так zip, но расширение у них docx
+//! (имеются в виду MIME типы).
+//! Для парсинга используется crate-ы docx_rs и zip.
 
 use crate::{
     errors::ParserError,
@@ -20,13 +22,15 @@ type Result<T> = std::result::Result<T, ParserError>;
 type Id = String;
 type Target = String;
 type ImgNumber = u32;
-type ImagesInfo = HashMap<(u32, ImgNumber), Vec<u8>>;
+type Bytes = u8;
+type ImagesInfo = HashMap<(u32, ImgNumber), Vec<Bytes>>;
 
+/// FIX: дописать doc комментарии на каждое поле парсера
 pub(crate) struct DocxParser {
     /// HashMap, где хранятся id картинок и текст извлеченный из них
     pub images: HashMap<Id, String>,
     pub img_info: ImagesInfo,
-    temp_img_info: HashMap<Id, Vec<u8>>,
+    temp_img_info: HashMap<Id, Vec<Bytes>>,
     cur_img_ind: ImgNumber,
 }
 
@@ -56,7 +60,7 @@ impl DocxParser {
     /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
     /// - [`ParserError::XmlError`] - ошибка во время парсинга конфигурационного файла docx
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
-    pub(crate) fn get_from_docx(mut self, data: &[u8]) -> Result<(String, ImagesInfo)> {
+    pub(crate) fn get_from_docx(mut self, data: &[Bytes]) -> Result<(String, ImagesInfo)> {
         let dox = read_docx(data)?;
         // Вытаскиваем все картинки
         let images_bytes = self.extract_images_from_docx(data)?;
@@ -93,13 +97,13 @@ impl DocxParser {
     /// - `data` - слайс байтов данных docx файла
     ///
     /// # Returns
-    /// - Ok([`HashMap<Id, Vec<u8>>`]) - возвращает имя словарь (id файла, байты файла)
+    /// - Ok([`HashMap<Id, Vec<Bytes>>`]) - возвращает имя словарь (id файла, байты файла)
     /// - Err([`ParserError`]) - ошибка во время парсинга картинки
     ///
     /// # Errors
     /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
-    fn extract_text_from_images(&mut self, images: HashMap<Id, Vec<u8>>) -> Result<()> {
+    fn extract_text_from_images(&mut self, images: HashMap<Id, Vec<Bytes>>) -> Result<()> {
         self.temp_img_info = images.clone();
         self.images = images
             .into_par_iter()
@@ -114,13 +118,13 @@ impl DocxParser {
     /// - `data` - слайс байтов данных docx файла
     ///
     /// # Returns
-    /// - Ok([`HashMap<Id, Vec<u8>>`]) - возвращает имя словарь (id файла, байты файла)
+    /// - Ok([`HashMap<Id, Vec<Bytes>>`]) - возвращает имя словарь (id файла, байты файла)
     /// - Err([`ParserError`]) - ошибка во время парсинга файла
     ///
     /// # Errors
     /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
     /// - [`ParserError::XmlError`] - ошибка во время парсинга конфигурационного файла docx
-    fn extract_images_from_docx(&self, data: &[u8]) -> Result<HashMap<Id, Vec<u8>>> {
+    fn extract_images_from_docx(&self, data: &[Bytes]) -> Result<HashMap<Id, Vec<u8>>> {
         let reader = Cursor::new(data);
         let mut archive = ZipArchive::new(reader)?;
 
@@ -149,7 +153,7 @@ impl DocxParser {
     /// - [`ParserError::ZipError`] - ошибка парсинга docx как zip
     /// - [`ParserError::XmlError`] - ошибка парсинга конфигурационного файла docx
     /// - [`ParserError::XmlAttrError`] - ошибка работы с аттрибутами в xml
-    fn find_images_info(archive: &mut ZipArchive<Cursor<&[u8]>>) -> Result<HashMap<Target, Id>> {
+    fn find_images_info(archive: &mut ZipArchive<Cursor<&[Bytes]>>) -> Result<HashMap<Target, Id>> {
         let mut rels_file = archive.by_name("word/_rels/document.xml.rels")?;
         let mut rels = Vec::new();
         rels_file.read_to_end(&mut rels)?;
@@ -163,12 +167,12 @@ impl DocxParser {
     /// - `images_info` - словарь из пар пути до файла и id файла
     ///
     /// # Returns
-    /// - Ok([`HashMap<Id, Vec<u8>>`]) - возвращает словарь (id файла, байты файла)
+    /// - Ok([`HashMap<Id, Vec<Bytes>>`]) - возвращает словарь (id файла, байты файла)
     /// - Err([`ParserError::ZipError`]) - ошибка во время парсинга файла
     fn extract_images(
-        archive: &mut ZipArchive<Cursor<&[u8]>>,
+        archive: &mut ZipArchive<Cursor<&[Bytes]>>,
         images_info: HashMap<Target, Id>,
-    ) -> Result<HashMap<Id, Vec<u8>>> {
+    ) -> Result<HashMap<Id, Vec<Bytes>>> {
         let mut images_with_id = HashMap::new();
 
         for ind in 0..archive.len() {
@@ -312,9 +316,10 @@ mod tests {
     use zip::ZipArchive;
 
     type Result<T> = std::result::Result<T, ParserError>;
+    type Bytes = u8;
 
     /// Считывает данные из файла ввиде byte vec
-    fn read_data_from_file(file_name: &str) -> Result<Vec<u8>> {
+    fn read_data_from_file(file_name: &str) -> Result<Vec<Bytes>> {
         Ok(std::fs::read(file_name)?)
     }
 
