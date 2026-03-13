@@ -61,6 +61,12 @@ pub enum ParserError {
     #[error("Docx error: {0}")]
     PptxError(#[from] rustypptx::PptxError),
 
+    /// Ошибка чтения xlsx
+    ///
+    /// Ошибки библиотеки calamine для работы с xlsx
+    #[error("Docx error: {0}")]
+    XlsxError(#[from] calamine::XlsxError),
+
     /// Ошибка tesseract::InitializeError
     #[error("Tesseract init error: {0}")]
     TesseractInitError(#[from] tesseract::InitializeError),
