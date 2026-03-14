@@ -12,7 +12,8 @@ use crate::{
     },
     errors::ParserError,
     parsers::{
-        MSOfficParser, docx, image::get_from_image, pdf::get_from_pdf, pptx, text::get_from_text,
+        MSOfficeParser, docx, image::get_from_image, pdf::get_from_pdf, pptx, text::get_from_text,
+        xlsx,
     },
 };
 
@@ -44,7 +45,10 @@ pub fn get_text(file_name: &str) -> Result<(String, ImagesInfo)> {
             let docx_parser = docx::DocxParser::new();
             docx_parser.get_text(&file_data)
         }
-        Some(mime) if mime == APPLICATION_XLSX => todo!(),
+        Some(mime) if mime == APPLICATION_XLSX => {
+            let xlsx_parser = xlsx::XlsxParser::new();
+            xlsx_parser.get_text(&file_data)
+        }
         Some(mime) if mime == APPLICATION_PPTX => {
             let pptx_parser = pptx::PptxParser::new();
             pptx_parser.get_text(&file_data)

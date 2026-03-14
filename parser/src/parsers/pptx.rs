@@ -8,7 +8,7 @@ use rayon::prelude::*;
 
 use crate::{
     errors::ParserError,
-    parsers::{MSOfficParser, image::get_from_image},
+    parsers::{MSOfficeParser, image::get_from_image},
 };
 
 type Result<T> = std::result::Result<T, ParserError>;
@@ -24,7 +24,7 @@ pub(crate) struct PptxParser {
     pub slides_text: Vec<String>,
 }
 
-impl MSOfficParser for PptxParser {
+impl MSOfficeParser for PptxParser {
     /// Извлекает текстовые данные и текст из картинок
     ///
     /// # Arguments
@@ -127,7 +127,7 @@ impl PptxParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::{errors::ParserError, parsers::{MSOfficParser, pptx::PptxParser}};
+    use crate::{errors::ParserError, parsers::{MSOfficeParser, pptx::PptxParser}};
 
     type Bytes = u8;
     type Result<T> = std::result::Result<T, ParserError>;

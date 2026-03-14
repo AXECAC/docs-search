@@ -9,7 +9,7 @@ use rayon::prelude::*;
 
 use crate::{
     errors::ParserError,
-    parsers::{MSOfficParser, image::get_from_image},
+    parsers::{MSOfficeParser, image::get_from_image},
 };
 
 type Result<T> = std::result::Result<T, ParserError>;
@@ -24,7 +24,7 @@ pub(crate) struct XlsxParser {
     pub sheet_text: Vec<String>,
 }
 
-impl MSOfficParser for XlsxParser {
+impl MSOfficeParser for XlsxParser {
     /// Извлекает текстовые данные и текст из картинок
     ///
     /// # Arguments

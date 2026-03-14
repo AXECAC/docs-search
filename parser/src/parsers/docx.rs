@@ -6,7 +6,7 @@
 
 use crate::{
     errors::ParserError,
-    parsers::{MSOfficParser, image::get_from_image, xml::get_info_from_xml_rels},
+    parsers::{MSOfficeParser, image::get_from_image, xml::get_info_from_xml_rels},
 };
 use rayon::prelude::*;
 
@@ -34,7 +34,7 @@ pub(crate) struct DocxParser {
     cur_img_ind: ImgNumber,
 }
 
-impl MSOfficParser for DocxParser {
+impl MSOfficeParser for DocxParser {
     /// Извлекает текстовые данные из параграфов, таблиц и из картинок из docx файлов
     ///
     /// # Arguments
@@ -313,7 +313,7 @@ impl DocxParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::{errors::ParserError, parsers::{MSOfficParser, docx::DocxParser}};
+    use crate::{errors::ParserError, parsers::{MSOfficeParser, docx::DocxParser}};
     use std::io::Cursor;
     use zip::ZipArchive;
 
