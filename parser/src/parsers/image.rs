@@ -8,6 +8,7 @@ use std::io::Cursor;
 use tesseract::Tesseract;
 
 type Result<T> = std::result::Result<T, ParserError>;
+type Bytes = u8;
 
 /// Парсит байты картинки и извлекает из них текст используя OCR
 ///
@@ -24,7 +25,7 @@ type Result<T> = std::result::Result<T, ParserError>;
 /// # Errors
 /// - [`ParserError::ImageError`] - ошибка во время обработки картинки
 /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
-pub(crate) fn get_from_image(data: &[u8]) -> Result<String> {
+pub(crate) fn extract_text_from_image(data: &[Bytes]) -> Result<String> {
     let valid_data = match match_parsers::define_mime_type(data) {
         Some(mime) if is_correct_img_mime(&mime) => data,
         _ => &convert_to_png(data)?,
@@ -39,7 +40,7 @@ fn is_correct_img_mime(mime: &Mime) -> bool {
 }
 
 /// Попытка конвертировать байты катинки в png для дальнейшего парсинга
-fn convert_to_png(data: &[u8]) -> Result<Vec<u8>> {
+fn convert_to_png(data: &[Bytes]) -> Result<Vec<Bytes>> {
     let img = image::load_from_memory(data)?;
     let mut buf = Cursor::new(Vec::new());
     img.write_to(&mut buf, image::ImageFormat::Png)?;
@@ -55,7 +56,7 @@ fn convert_to_png(data: &[u8]) -> Result<Vec<u8>> {
 /// # Returns
 /// - Ok([`String`]) - извлеченный текст
 /// - Err([`ParserError`]) - если при работе с Tesseract возникает ошибка
-fn parse_with_tesseract(data: &[u8]) -> Result<String> {
+fn parse_with_tesseract(data: &[Bytes]) -> Result<String> {
     // Инициализируем Tesseract с Английским и Русским языками
     let tes = Tesseract::new(None, Some("eng+rus"))?;
 
@@ -64,19 +65,20 @@ fn parse_with_tesseract(data: &[u8]) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{errors::ParserError, parsers::image::get_from_image};
+    use crate::{errors::ParserError, parsers::image::extract_text_from_image};
 
     type Result<T> = std::result::Result<T, ParserError>;
+    type Bytes = u8;
 
     /// Считывает данные из файла ввиде byte vec
-    fn read_data_from_file(file_name: &str) -> Result<Vec<u8>> {
+    fn read_data_from_file(file_name: &str) -> Result<Vec<Bytes>> {
         Ok(std::fs::read(file_name)?)
     }
 
     #[test]
     fn extract_from_image_en() -> Result<()> {
         let data = read_data_from_file("assets/text_from_img_en.png")?;
-        let res = get_from_image(&data)?;
+        let res = extract_text_from_image(&data)?;
 
         assert_eq!(
             res.trim(),
@@ -91,7 +93,7 @@ mod tests {
     #[test]
     fn extract_from_image_ru() -> Result<()> {
         let data = read_data_from_file("assets/text_from_img_ru.png")?;
-        let res = get_from_image(&data)?;
+        let res = extract_text_from_image(&data)?;
 
         assert_eq!(
             res.trim(),

@@ -17,8 +17,8 @@ mod parser {
 
     /// Парсинг текста `from` файла по `path`
     #[pyo3::pyfunction]
-    pub fn get_text(from_path: &str) -> PyResult<(String, ImagesInfo)> {
-        Ok(crate::match_parsers::get_text(from_path)?)
+    pub fn extract_text(from_path: &str) -> PyResult<(String, ImagesInfo)> {
+        Ok(crate::match_parsers::extract_text(from_path)?)
     }
 
     /// Конвертер старых Microsoft office форматов в новые
@@ -34,7 +34,7 @@ mod parser {
 /// Функция реализации python модуля, добавляющая в него функции
 #[pymodule]
 fn docs_parser(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(parser::get_text, m)?)?;
+    m.add_function(wrap_pyfunction!(parser::extract_text, m)?)?;
     m.add_function(wrap_pyfunction!(parser::convert_to_new_format, m)?)?;
     Ok(())
 }

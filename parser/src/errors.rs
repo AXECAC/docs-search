@@ -17,6 +17,10 @@ pub enum ParserError {
     #[error("IO error: {0}")]
     IoError(#[from] io::Error),
 
+    /// Ошибка записи в буффер
+    #[error("Fmt error: {0}")]
+    FmtError(#[from] std::fmt::Error),
+
     /// Ошибка парсинга utf-8 из байтов текстового файла
     #[error("From utf-8 error: {0}")]
     FromUTF8Error(#[from] std::string::FromUtf8Error),
@@ -60,6 +64,12 @@ pub enum ParserError {
     /// Ошибки библиотеки для работы с pptx
     #[error("Docx error: {0}")]
     PptxError(#[from] rustypptx::PptxError),
+
+    /// Ошибка чтения xlsx
+    ///
+    /// Ошибки библиотеки calamine для работы с xlsx
+    #[error("Docx error: {0}")]
+    XlsxError(#[from] calamine::XlsxError),
 
     /// Ошибка tesseract::InitializeError
     #[error("Tesseract init error: {0}")]

@@ -1,17 +1,21 @@
-//! Парсинг pptx файлов
+//! Модуль для парсинга pptx файлов.
 //!
-//! Для парсинга используется crate rustypptx
+//! Для парсинга используется crate rustypptx.
 
 use std::collections::HashMap;
 
 use rayon::prelude::*;
 
-use crate::{errors::ParserError, parsers::image::get_from_image};
+use crate::{
+    errors::ParserError,
+    parsers::{MSOfficeParser, image::extract_text_from_image},
+};
 
 type Result<T> = std::result::Result<T, ParserError>;
 type SlideIndex = u32;
 type ImgOnSlideNum = u32;
-type ImagesInfo = HashMap<(SlideIndex, ImgOnSlideNum), Vec<u8>>;
+type Bytes = u8;
+type ImagesInfo = HashMap<(SlideIndex, ImgOnSlideNum), Vec<Bytes>>;
 
 pub(crate) struct PptxParser {
     /// HashMap для сопоставления байтов картинки с её местом в тексте слайда
@@ -20,15 +24,7 @@ pub(crate) struct PptxParser {
     pub slides_text: Vec<String>,
 }
 
-impl PptxParser {
-    /// Создает новый [`PptxParser`].
-    pub(crate) fn new() -> Self {
-        Self {
-            slides_img_info: HashMap::new(),
-            slides_text: Vec::new(),
-        }
-    }
-
+impl MSOfficeParser for PptxParser {
     /// Извлекает текстовые данные и текст из картинок
     ///
     /// # Arguments
@@ -43,7 +39,7 @@ impl PptxParser {
     /// - [`ParserError::PptxError`] - ошибка во время парсинга pptx
     /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
-    pub(crate) fn get_from_pptx(mut self, data: &[u8]) -> Result<(String, ImagesInfo)> {
+    fn extract_text(mut self, data: &[Bytes]) -> Result<(String, ImagesInfo)> {
         let pptx_doc = rustypptx::parse_pptx_bytes(data)?;
         let mut result_text = String::new();
 
@@ -55,6 +51,16 @@ impl PptxParser {
         result_text = self.add_text_from_img_in_slides()?;
 
         Ok((result_text, self.slides_img_info))
+    }
+}
+
+impl PptxParser {
+    /// Создает новый [`PptxParser`].
+    pub(crate) fn new() -> Self {
+        Self {
+            slides_img_info: HashMap::new(),
+            slides_text: Vec::new(),
+        }
     }
 
     /// Заполняет текущий парсер данными из pptx файла для дальнейшей обработки
@@ -108,7 +114,7 @@ impl PptxParser {
                         "\n/********slide = {ind}; img_num = {img_num}********/\n"
                     ));
 
-                    res_slide_text.push_str(&get_from_image(data)?);
+                    res_slide_text.push_str(&extract_text_from_image(data)?);
                     res_slide_text
                         .push_str("\n/**************************************************/\n");
                 }
@@ -121,19 +127,20 @@ impl PptxParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::{errors::ParserError, parsers::pptx::PptxParser};
+    use crate::{errors::ParserError, parsers::{MSOfficeParser, pptx::PptxParser}};
 
+    type Bytes = u8;
     type Result<T> = std::result::Result<T, ParserError>;
 
     /// Считывает данные из файла ввиде byte vec
-    fn read_data_from_file(file_name: &str) -> Result<Vec<u8>> {
+    fn read_data_from_file(file_name: &str) -> Result<Vec<Bytes>> {
         Ok(std::fs::read(file_name)?)
     }
 
     fn extract_text_from_pptx(extract_file: &str, check_file: &str) -> Result<()> {
         let data = read_data_from_file(extract_file)?;
         let pars = PptxParser::new();
-        let (res, _) = pars.get_from_pptx(&data)?;
+        let (res, _) = pars.extract_text(&data)?;
 
         assert_eq!(
             res.trim(),
