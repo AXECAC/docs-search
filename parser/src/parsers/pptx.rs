@@ -6,7 +6,10 @@ use std::collections::HashMap;
 
 use rayon::prelude::*;
 
-use crate::{errors::ParserError, parsers::image::get_from_image};
+use crate::{
+    errors::ParserError,
+    parsers::{MSOfficParser, image::get_from_image},
+};
 
 type Result<T> = std::result::Result<T, ParserError>;
 type SlideIndex = u32;
@@ -21,15 +24,7 @@ pub(crate) struct PptxParser {
     pub slides_text: Vec<String>,
 }
 
-impl PptxParser {
-    /// Создает новый [`PptxParser`].
-    pub(crate) fn new() -> Self {
-        Self {
-            slides_img_info: HashMap::new(),
-            slides_text: Vec::new(),
-        }
-    }
-
+impl MSOfficParser for PptxParser {
     /// Извлекает текстовые данные и текст из картинок
     ///
     /// # Arguments
@@ -44,7 +39,7 @@ impl PptxParser {
     /// - [`ParserError::PptxError`] - ошибка во время парсинга pptx
     /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
-    pub(crate) fn get_from_pptx(mut self, data: &[Bytes]) -> Result<(String, ImagesInfo)> {
+    fn get_text(mut self, data: &[Bytes]) -> Result<(String, ImagesInfo)> {
         let pptx_doc = rustypptx::parse_pptx_bytes(data)?;
         let mut result_text = String::new();
 
@@ -56,6 +51,16 @@ impl PptxParser {
         result_text = self.add_text_from_img_in_slides()?;
 
         Ok((result_text, self.slides_img_info))
+    }
+}
+
+impl PptxParser {
+    /// Создает новый [`PptxParser`].
+    pub(crate) fn new() -> Self {
+        Self {
+            slides_img_info: HashMap::new(),
+            slides_text: Vec::new(),
+        }
     }
 
     /// Заполняет текущий парсер данными из pptx файла для дальнейшей обработки
@@ -122,7 +127,7 @@ impl PptxParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::{errors::ParserError, parsers::pptx::PptxParser};
+    use crate::{errors::ParserError, parsers::{MSOfficParser, pptx::PptxParser}};
 
     type Bytes = u8;
     type Result<T> = std::result::Result<T, ParserError>;
@@ -135,7 +140,7 @@ mod tests {
     fn extract_text_from_pptx(extract_file: &str, check_file: &str) -> Result<()> {
         let data = read_data_from_file(extract_file)?;
         let pars = PptxParser::new();
-        let (res, _) = pars.get_from_pptx(&data)?;
+        let (res, _) = pars.get_text(&data)?;
 
         assert_eq!(
             res.trim(),
