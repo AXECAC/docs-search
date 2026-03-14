@@ -9,7 +9,7 @@ use rayon::prelude::*;
 
 use crate::{
     errors::ParserError,
-    parsers::{MSOfficeParser, image::get_from_image},
+    parsers::{MSOfficeParser, image::extract_text_from_image},
 };
 
 type Result<T> = std::result::Result<T, ParserError>;
@@ -39,7 +39,7 @@ impl MSOfficeParser for XlsxParser {
     /// - [`ParserError::XlsxError`] - ошибка во время парсинга xlsx
     /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
-    fn get_text(mut self, data: &[u8]) -> Result<(String, ImagesInfo)> {
+    fn extract_text(mut self, data: &[u8]) -> Result<(String, ImagesInfo)> {
         let cursor = Cursor::new(data);
 
         let mut excel = Xlsx::new(cursor)?;

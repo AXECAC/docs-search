@@ -8,7 +8,7 @@ use rayon::prelude::*;
 
 use crate::{
     errors::ParserError,
-    parsers::{MSOfficeParser, image::get_from_image},
+    parsers::{MSOfficeParser, image::extract_text_from_image},
 };
 
 type Result<T> = std::result::Result<T, ParserError>;
@@ -39,7 +39,7 @@ impl MSOfficeParser for PptxParser {
     /// - [`ParserError::PptxError`] - ошибка во время парсинга pptx
     /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
-    fn get_text(mut self, data: &[Bytes]) -> Result<(String, ImagesInfo)> {
+    fn extract_text(mut self, data: &[Bytes]) -> Result<(String, ImagesInfo)> {
         let pptx_doc = rustypptx::parse_pptx_bytes(data)?;
         let mut result_text = String::new();
 
@@ -114,7 +114,7 @@ impl PptxParser {
                         "\n/********slide = {ind}; img_num = {img_num}********/\n"
                     ));
 
-                    res_slide_text.push_str(&get_from_image(data)?);
+                    res_slide_text.push_str(&extract_text_from_image(data)?);
                     res_slide_text
                         .push_str("\n/**************************************************/\n");
                 }
@@ -140,7 +140,7 @@ mod tests {
     fn extract_text_from_pptx(extract_file: &str, check_file: &str) -> Result<()> {
         let data = read_data_from_file(extract_file)?;
         let pars = PptxParser::new();
-        let (res, _) = pars.get_text(&data)?;
+        let (res, _) = pars.extract_text(&data)?;
 
         assert_eq!(
             res.trim(),

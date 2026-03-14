@@ -19,5 +19,5 @@ type ImagesInfo = HashMap<(u32, ImgNum), Vec<Bytes>>;
 
 /// Trait для парсеров MS office с извлечением текста и извлечением текста с изображений
 pub(crate) trait MSOfficeParser {
-    fn get_text(self, data: &[Bytes]) -> Result<(String, ImagesInfo)>;
+    fn extract_text(self, data: &[Bytes]) -> Result<(String, ImagesInfo)>;
 }

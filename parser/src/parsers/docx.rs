@@ -6,7 +6,7 @@
 
 use crate::{
     errors::ParserError,
-    parsers::{MSOfficeParser, image::get_from_image, xml::get_info_from_xml_rels},
+    parsers::{MSOfficeParser, image::extract_text_from_image, xml::get_info_from_xml_rels},
 };
 use rayon::prelude::*;
 
@@ -50,7 +50,7 @@ impl MSOfficeParser for DocxParser {
     /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
     /// - [`ParserError::XmlError`] - ошибка во время парсинга конфигурационного файла docx
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
-    fn get_text(mut self, data: &[Bytes]) -> Result<(String, ImagesInfo)> {
+    fn extract_text(mut self, data: &[Bytes]) -> Result<(String, ImagesInfo)> {
         let dox = read_docx(data)?;
         // Вытаскиваем все картинки
         let images_bytes = self.extract_images_from_docx(data)?;
@@ -109,7 +109,7 @@ impl DocxParser {
         self.temp_img_info = images.clone();
         self.images = images
             .into_par_iter()
-            .map(|(id, data)| Ok((id, get_from_image(&data)?)))
+            .map(|(id, data)| Ok((id, extract_text_from_image(&data)?)))
             .collect::<Result<HashMap<Id, String>>>()?;
         Ok(())
     }
@@ -371,7 +371,7 @@ mod tests {
     fn extract_text_from_docx(extract_file: &str, check_file: &str) -> Result<()> {
         let data = read_data_from_file(extract_file)?;
         let pars = DocxParser::new();
-        let (res, _) = pars.get_text(&data)?;
+        let (res, _) = pars.extract_text(&data)?;
 
         assert_eq!(
             res.trim(),
