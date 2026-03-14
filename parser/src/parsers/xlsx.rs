@@ -2,7 +2,7 @@
 //!
 //! Для парсинга используется crate-ы calamine и zip
 
-use std::{collections::HashMap, io::Cursor};
+use std::{collections::HashMap, fmt::Write, io::Cursor};
 
 use calamine::{Reader, Xlsx};
 use rayon::prelude::*;
@@ -38,35 +38,17 @@ impl MSOfficeParser for XlsxParser {
     /// # Errors
     /// - [`ParserError::XlsxError`] - ошибка во время парсинга xlsx
     /// - [`ParserError::ImageError`] - ошибка во время парсинга картинки
+    /// - [`ParserError::FmtError`] - ошибка во время записи в буффер
+    /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
     fn extract_text(mut self, data: &[u8]) -> Result<(String, ImagesInfo)> {
         let cursor = Cursor::new(data);
 
-        let mut excel = Xlsx::new(cursor)?;
+        let excel = Xlsx::new(cursor)?;
+        let sheet_names = excel.sheet_names();
 
-        let sheet_names = excel.sheet_names().clone();
-
-        for name in sheet_names {
-            if let Ok(range) = excel.worksheet_range(&name) {
-                let mut cur_sheet_text = String::new();
-                cur_sheet_text.push_str("\n*** Sheet: ");
-                cur_sheet_text.push_str(&name);
-                cur_sheet_text.push_str(" ***\n");
-                cur_sheet_text.push_str(
-                    &range
-                        .rows()
-                        .map(|row| {
-                            row.iter()
-                                .map(std::string::ToString::to_string)
-                                .collect::<Vec<String>>()
-                                .join(",")
-                        })
-                        .collect::<Vec<String>>()
-                        .join("\n"),
-                );
-                self.sheet_text.push(cur_sheet_text);
-            }
-        }
+        // чтение текста с страниц
+        self.read_sheets(excel, sheet_names)?;
 
         Ok((self.sheet_text.join("\n"), self.sheet_img_info))
     }
@@ -79,5 +61,44 @@ impl XlsxParser {
             sheet_img_info: HashMap::new(),
             sheet_text: Vec::new(),
         }
+    }
+
+    ///  Читает текст со всех страниц
+    ///
+    /// # Arguments
+    /// - `excel` - документ
+    /// - `sheet_names` - названия страниц
+    ///
+    /// # Errors
+    /// - [`ParserError::XlsxError`] - ошибка во время парсинга xlsx
+    /// - [`ParserError::FmtError`] - ошибка во время записи в буффер
+    /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
+    fn read_sheets(
+        &mut self,
+        mut excel: Xlsx<Cursor<&[u8]>>,
+        sheet_names: Vec<String>,
+    ) -> Result<()> {
+        for name in sheet_names {
+            if let Ok(range) = excel.worksheet_range(&name) {
+                let mut cur_sheet_text = String::new();
+                cur_sheet_text.push_str("\n/*** Sheet: ");
+                cur_sheet_text.push_str(&name);
+                cur_sheet_text.push_str(" ***/\n");
+
+                // чтение текста из ячеек
+                range.rows().try_for_each(|row| -> Result<()> {
+                    row.iter().enumerate().try_for_each(|(index, cell)| {
+                        if index > 0 {
+                            cur_sheet_text.push_str(", ");
+                        }
+                        write!(cur_sheet_text, "{cell}")
+                    })?;
+                    Ok(())
+                })?;
+
+                self.sheet_text.push(cur_sheet_text);
+            }
+        }
+        Ok(())
     }
 }
