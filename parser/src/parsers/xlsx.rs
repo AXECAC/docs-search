@@ -169,3 +169,35 @@ impl XlsxParser {
         Ok(text_from_images)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        errors::ParserError,
+        parsers::{MSOfficeParser, xlsx::XlsxParser},
+    };
+
+    type Bytes = u8;
+    type Result<T> = std::result::Result<T, ParserError>;
+
+    /// Считывает данные из файла ввиде byte vec
+    fn read_data_from_file(file_name: &str) -> Result<Vec<Bytes>> {
+        Ok(std::fs::read(file_name)?)
+    }
+
+    #[test]
+    fn extract_text_from_xlsx() -> Result<()> {
+        let data = read_data_from_file("assets/Book.xlsx")?;
+        let pars = XlsxParser::new();
+        let (res, _) = pars.extract_text(&data)?;
+
+        assert_eq!(
+            res.trim(),
+            String::from_utf8(read_data_from_file(
+                "assets/tests_results/extract_text_from_xlsx.txt"
+            )?)?
+            .trim()
+        );
+        Ok(())
+    }
+}
