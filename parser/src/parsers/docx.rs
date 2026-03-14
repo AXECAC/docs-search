@@ -6,7 +6,7 @@
 
 use crate::{
     errors::ParserError,
-    parsers::{image::get_from_image, xml::get_info_from_xml_rels},
+    parsers::{MSOfficParser, image::get_from_image, xml::get_info_from_xml_rels},
 };
 use rayon::prelude::*;
 
@@ -34,17 +34,7 @@ pub(crate) struct DocxParser {
     cur_img_ind: ImgNumber,
 }
 
-impl DocxParser {
-    /// Создает новый [`DocxParser`].
-    pub(crate) fn new() -> Self {
-        Self {
-            images: HashMap::new(),
-            img_info: HashMap::new(),
-            temp_img_info: HashMap::new(),
-            cur_img_ind: 0,
-        }
-    }
-
+impl MSOfficParser for DocxParser {
     /// Извлекает текстовые данные из параграфов, таблиц и из картинок из docx файлов
     ///
     /// # Arguments
@@ -60,7 +50,7 @@ impl DocxParser {
     /// - [`ParserError::ZipError`] - ошибка во время парсинга docx как zip
     /// - [`ParserError::XmlError`] - ошибка во время парсинга конфигурационного файла docx
     /// - Остальные [`ParserError`] связанные с Tesseract ошибки во время парсинга картинки
-    pub(crate) fn get_from_docx(mut self, data: &[Bytes]) -> Result<(String, ImagesInfo)> {
+    fn get_text(mut self, data: &[Bytes]) -> Result<(String, ImagesInfo)> {
         let dox = read_docx(data)?;
         // Вытаскиваем все картинки
         let images_bytes = self.extract_images_from_docx(data)?;
@@ -89,6 +79,18 @@ impl DocxParser {
                 .to_string(),
             self.img_info,
         ))
+    }
+}
+
+impl DocxParser {
+    /// Создает новый [`DocxParser`].
+    pub(crate) fn new() -> Self {
+        Self {
+            images: HashMap::new(),
+            img_info: HashMap::new(),
+            temp_img_info: HashMap::new(),
+            cur_img_ind: 0,
+        }
     }
 
     /// Проходится по всем парам
@@ -311,7 +313,7 @@ impl DocxParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::{errors::ParserError, parsers::docx::DocxParser};
+    use crate::{errors::ParserError, parsers::{MSOfficParser, docx::DocxParser}};
     use std::io::Cursor;
     use zip::ZipArchive;
 
@@ -369,7 +371,7 @@ mod tests {
     fn extract_text_from_docx(extract_file: &str, check_file: &str) -> Result<()> {
         let data = read_data_from_file(extract_file)?;
         let pars = DocxParser::new();
-        let (res, _) = pars.get_from_docx(&data)?;
+        let (res, _) = pars.get_text(&data)?;
 
         assert_eq!(
             res.trim(),
