@@ -23,3 +23,12 @@ pub(crate) struct XlsxParser {
     /// Текст sheet
     pub sheet_text: Vec<String>,
 }
+impl XlsxParser {
+    /// Создает новый [`XlsxParser`].
+    pub(crate) fn new() -> Self {
+        Self {
+            sheet_img_info: HashMap::new(),
+            sheet_text: Vec::new(),
+        }
+    }
+}
