@@ -1,5 +1,22 @@
+# Docs search
+<!-- здесь должно быть описание проекта -->
 
-## Зависимости
+## Зависимости и их установка
+### Ubuntu
+```bash
+sudo apt update
+sudo apt install -y build-essential pkg-config clang llvm-dev libclang-dev \
+                    libleptonica-dev libtesseract-dev tesseract-ocr \
+                    tesseract-ocr-rus tesseract-ocr-eng python3 python3-pip
+```
+
+### Arch Linux
+```bash
+sudo pacman -Syu --needed --noconfirm build-essential pkgconf clang llvm \
+                                      leptonica tesseract tesseract-data-rus \
+                                      tesseract-data-eng python-pip
+```
+
 - maturin:
   ```bash
   # Запускаете .venv
@@ -11,14 +28,7 @@
   cd parser
   maturin develop
   ```
-- Запускаем python (пока что там просто 2 + 2)
+- Запускаем python
   ```bash
   python main.py
   ```
-
-## Замечания
-Для корректной работы lsp на python-е с либой на rust-е нужно обновлять
-описание сигнатур в docs\_parser.pyi, неприятно, но не критично. В целом очень
-даже вкусно
-
-Про тесты на rust-е напишу потом
