@@ -8,3 +8,4 @@ word/
 venv
 .venv
 *__pycache__/
+app/uploads*
