@@ -18,11 +18,11 @@ def read_item(source: str):
 @app.post("/upload", response_model=ParseResponse)
 async def upload_file(file: UploadFile,
                       parse_immediatly: bool = False):
-    file_id = uuid.uuid4()
+    file_id = str(uuid.uuid4())
     file_path = f"uploads/raw/{file_id}_{file.filename}"
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-    content = file.read()
+    content = await file.read()
     with open(file_path, "wb") as f:
         f.write(content)
 
