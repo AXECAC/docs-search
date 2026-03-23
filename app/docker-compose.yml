@@ -1,0 +1,6 @@
+services:
+  solr:
+    container_name: solr
+    image: solr:9.1.0
+    ports:
+      - "8983:8983"
