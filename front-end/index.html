@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--not-for-production-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Parser - Extract Text from Documents</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        h3 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f5f3ff;
+        }
+
+        .upload-area.drag-over {
+            border-color: #667eea;
+            background: #ede9fe;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .checkbox-container {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .checkbox-container input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-container label {
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .file-info {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #166534;
+            margin-bottom: 8px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #15803d;
+        }
+
+        .result {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .result-content {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 14px;
+            color: #4b5563;
+            word-wrap: break-word;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .status-uploaded {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-parsed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s ease infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .button-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .get-text-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .get-text-input {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .get-text-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .get-text-input button {
+            width: auto;
+            padding: 10px 20px;
+        }
+
+        .text-output {
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .text-header {
+            background: #e5e7eb;
+            padding: 12px;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .text-body {
+            padding: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            background: white;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            width: auto;
+        }
+
+        .copy-btn:hover {
+            background: #5a67d8;
+            transform: none;
+        }
+
+        .recent-files {
+            margin-top: 20px;
+        }
+
+        .recent-file-item {
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .recent-file-item:hover {
+            background: #f3f4f6;
+        }
+
+        .file-path {
+            font-size: 12px;
+            color: #6b7280;
+            font-family: monospace;
+        }
+
+        .badge {
+            background: #e5e7eb;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        .image-info {
+            background: #e0e7ff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>📄 Document Text Extractor</h1>
+            <p class="subtitle">Upload documents, images, and PDFs to extract text content</p>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Click or drag & drop to upload</div>
+                <div class="upload-hint">Supports: PDF, DOCX, PPTX, PNG, JPG, TYP, and more</div>
+                <input type="file" id="fileInput" class="file-input">
+            </div>
+
+            <div class="checkbox-container">
+                <input type="checkbox" id="parseImmediately" checked>
+                <label for="parseImmediately">Extract text immediately after upload</label>
+            </div>
+
+            <button id="uploadBtn">Upload & Extract Text</button>
+
+            <div id="fileInfo" class="file-info"></div>
+            <div id="result" class="result"></div>
+        </div>
+
+        <div class="card">
+            <h3>🔍 Extract Text from File</h3>
+            <div class="get-text-section">
+                <div class="get-text-input">
+                    <input type="text" id="sourcePath" placeholder="Enter file path (e.g., uploads/raw/filename.pptx or /path/to/document.pdf)">
+                    <button id="getTextBtn">Extract Text</button>
+                </div>
+                
+                <div id="extractedText" class="text-output" style="display: none;">
+                    <div class="text-header">
+                        <span>📝 Extracted Text</span>
+                        <button id="copyTextBtn" class="copy-btn">Copy to Clipboard</button>
+                    </div>
+                    <div id="textContent" class="text-body"></div>
+                    <div id="metadata" style="padding: 12px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;"></div>
+                </div>
+                
+                <div id="errorMessage" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="card" id="recentCard" style="display: none;">
+            <h3>📋 Recently Processed Files</h3>
+            <div id="recentFiles" class="recent-files"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const parseImmediately = document.getElementById('parseImmediately');
+        const fileInfoDiv = document.getElementById('fileInfo');
+        const resultDiv = document.getElementById('result');
+        const sourcePathInput = document.getElementById('sourcePath');
+        const getTextBtn = document.getElementById('getTextBtn');
+        const extractedTextDiv = document.getElementById('extractedText');
+        const textContentDiv = document.getElementById('textContent');
+        const copyTextBtn = document.getElementById('copyTextBtn');
+        const metadataDiv = document.getElementById('metadata');
+        const recentCard = document.getElementById('recentCard');
+        const recentFilesDiv = document.getElementById('recentFiles');
+
+        let selectedFile = null;
+        let recentFiles = JSON.parse(localStorage.getItem('recentFiles') || '[]');
+
+        // Display recent files
+        function updateRecentFiles() {
+            if (recentFiles.length > 0) {
+                recentCard.style.display = 'block';
+                recentFilesDiv.innerHTML = recentFiles.map(file => `
+                    <div class="recent-file-item" onclick="loadRecentFile('${file.path}')">
+                        <div>
+                            <strong>${file.name}</strong>
+                            <div class="file-path">${file.path}</div>
+                        </div>
+                        <span class="badge">${new Date(file.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Load recent file
+        window.loadRecentFile = function(path) {
+            sourcePathInput.value = path;
+            extractTextFromPath(path);
+        };
+
+        // Add to recent files
+        function addToRecentFiles(filename, filepath) {
+            recentFiles.unshift({
+                name: filename,
+                path: filepath,
+                timestamp: Date.now()
+            });
+            recentFiles = recentFiles.slice(0, 10); // Keep last 10
+            localStorage.setItem('recentFiles', JSON.stringify(recentFiles));
+            updateRecentFiles();
+        }
+
+        // Extract text from path
+        async function extractTextFromPath(source) {
+            getTextBtn.disabled = true;
+            getTextBtn.innerHTML = '<span class="button-text"><span class="loading"></span>Extracting...</span>';
+            extractedTextDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/items/?source=${encodeURIComponent(source)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Display extracted text
+                extractedTextDiv.style.display = 'block';
+                
+                const text = data.text || 'No text content extracted';
+                textContentDiv.innerHTML = text || '<em>No text content found in this file</em>';
+                
+                // Display metadata
+                let metadataHtml = `<strong>File:</strong> ${source}<br>`;
+                if (data.has_images) {
+                    metadataHtml += `<strong>📸 Images:</strong> ${data.image_count} image(s) extracted<br>`;
+                }
+                metadataHtml += `<strong>Characters:</strong> ${text.length.toLocaleString()}<br>`;
+                metadataHtml += `<strong>Words:</strong> ${text.split(/\s+/).filter(w => w.length > 0).length.toLocaleString()}`;
+                metadataDiv.innerHTML = metadataHtml;
+                
+                // Add to recent files
+                const filename = source.split('/').pop();
+                addToRecentFiles(filename, source);
+                
+            } catch (error) {
+                console.error('Error extracting text:', error);
+                extractedTextDiv.style.display = 'none';
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = `<div class="error">❌ ${error.message}<br><br>
+                    <strong>Tips:</strong><br>
+                    - Make sure the file path is correct<br>
+                    - Try uploading the file first using the upload form above<br>
+                    - Check that the file format is supported (.pdf, .docx, .pptx, .png, .jpg, .typ)<br>
+                    - Enable "Extract text immediately" when uploading
+                </div>`;
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 8000);
+            } finally {
+                getTextBtn.disabled = false;
+                getTextBtn.innerHTML = 'Extract Text';
+            }
+        }
+
+        // Upload area click handlers
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                selectedFile = files[0];
+                displayFileInfo(selectedFile);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                displayFileInfo(selectedFile);
+            }
+        });
+
+        function displayFileInfo(file) {
+            const fileSize = (file.size / 1024).toFixed(2);
+            fileInfoDiv.innerHTML = `
+                <div class="file-name">📎 ${file.name}</div>
+                <div class="file-size">${fileSize} KB</div>
+            `;
+            fileInfoDiv.classList.add('show');
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                showError('Please select a file first', 'result');
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span class="button-text"><span class="loading"></span>Uploading...</span>';
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('parse_immediatly', parseImmediately.checked);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+                
+                // Show upload result
+                const statusClass = data.status === 'parsed' ? 'status-parsed' : 'status-uploaded';
+                const statusText = data.status === 'parsed' ? '✓ Text Extracted' : '📤 Uploaded';
+                
+                resultDiv.innerHTML = `
+                    <div class="status-badge ${statusClass}">${statusText}</div>
+                    <div class="result-title">File Information</div>
+                    <div class="result-content">
+                        <strong>File ID:</strong> ${data.file_id}<br>
+                        <strong>Original Filename:</strong> ${data.original_filename}<br>
+                        ${data.parsed_file_path ? `<strong>Parsed Path:</strong> ${data.parsed_file_path}<br>` : ''}
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+                resultDiv.classList.add('show');
+                
+                // If parsed immediately, extract and display text
+                if (parseImmediately.checked) {
+                    const filePath = `uploads/raw/${data.file_id}_${selectedFile.name}`;
+                    sourcePathInput.value = filePath;
+                    await extractTextFromPath(filePath);
+                } else {
+                    // Set the path for manual extraction
+                    const filePath = `uploads/raw/${data.file_id}_${selectedFile.name}`;
+                    sourcePathInput.value = filePath;
+                    sourcePathInput.placeholder = "Click 'Extract Text' to parse this file";
+                    showSuccess('File uploaded successfully! Click "Extract Text" to parse it.', 'result');
+                }
+                
+                // Reset file selection
+                selectedFile = null;
+                fileInput.value = '';
+                fileInfoDiv.classList.remove('show');
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                showError(`Upload failed: ${error.message}`, 'result');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = 'Upload & Extract Text';
+            }
+        });
+
+        getTextBtn.addEventListener('click', async () => {
+            const source = sourcePathInput.value.trim();
+            
+            if (!source) {
+                showError('Please enter a file path', 'errorMessage');
+                return;
+            }
+            
+            await extractTextFromPath(source);
+        });
+
+        // Copy text to clipboard
+        copyTextBtn.addEventListener('click', async () => {
+            const text = textContentDiv.innerText;
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalText = copyTextBtn.textContent;
+                copyTextBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyTextBtn.textContent = originalText;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                showError('Failed to copy to clipboard', 'errorMessage');
+            }
+        });
+
+        function showError(message, targetId) {
+            const target = document.getElementById(targetId);
+            if (targetId === 'errorMessage') {
+                target.style.display = 'block';
+                target.innerHTML = `<div class="error">❌ ${message}</div>`;
+                setTimeout(() => {
+                    target.style.display = 'none';
+                }, 5000);
+            } else {
+                target.innerHTML = `<div class="error">❌ ${message}</div>`;
+                target.classList.add('show');
+                setTimeout(() => {
+                    target.classList.remove('show');
+                }, 5000);
+            }
+        }
+
+        function showSuccess(message, targetId) {
+            const target = document.getElementById(targetId);
+            target.innerHTML = `<div class="success">✓ ${message}</div>`;
+            target.classList.add('show');
+            setTimeout(() => {
+                target.classList.remove('show');
+            }, 3000);
+        }
+
+        // Test API connection on load
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/`);
+                if (response.ok) {
+                    console.log('✅ Connected to backend');
+                    showSuccess('Connected to backend successfully!', 'result');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Cannot connect to backend');
+                showError('Cannot connect to backend. Please make sure the server is running on http://localhost:8000', 'result');
+            }
+        }
+
+        // Initialize
+        updateRecentFiles();
+        testConnection();
+    </script>
+</body>
+</html>
