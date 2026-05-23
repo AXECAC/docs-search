@@ -5,3 +5,7 @@ docProps/
 media/
 word/
 *.xml
+venv
+.venv
+*__pycache__/
+app/uploads*
