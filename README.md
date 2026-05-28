@@ -30,5 +30,6 @@ sudo pacman -Syu --needed --noconfirm build-essential pkgconf clang llvm \
   ```
 - Запускаем python
   ```bash
-  python main.py
+  docker-compose up -d postgres solr
+  uvicorn app.main:app --reload
   ```

@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from sqlalchemy import text
 from app.database import engine
 import os
+from fastapi import FastAPI
+from app.database import engine
+from app.embeddings import load_model, get_embedding_dimension
 
 app = FastAPI(title="Document Search API")
 
@@ -12,9 +15,11 @@ async def startup():
             # Используем text() для явного указания SQL запроса
             result = await conn.execute(text("SELECT 1"))
             await conn.commit()
-            print("✓ Database connection successful")
+            print("Database connection successful")
     except Exception as e:
-        print(f"✗ Database connection failed: {e}")
+        print(f"Database connection failed: {e}")
+    load_model()
+    print(f"Embedding model loaded, dimension: {get_embedding_dimension()}")
 
 @app.get("/")
 def root():
