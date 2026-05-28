@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+asyncpg
+alembic
+python-dotenv
+python-multipart
+passlib[bcrypt]
+python-jose[cryptography]
+sentence-transformers
+nltk
+pymorphy3
+numpy
+requests

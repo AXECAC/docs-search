@@ -1,3 +1,30 @@
+from fastapi import FastAPI
+from sqlalchemy import text
+from app.database import engine
+import os
+
+app = FastAPI(title="Document Search API")
+
+@app.on_event("startup")
+async def startup():
+    try:
+        async with engine.connect() as conn:
+            # Используем text() для явного указания SQL запроса
+            result = await conn.execute(text("SELECT 1"))
+            await conn.commit()
+            print("✓ Database connection successful")
+    except Exception as e:
+        print(f"✗ Database connection failed: {e}")
+
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "Backend is running"}
+
+@app.get("/health")
+def health():
+    return {"status": "healthy", "database_url": os.getenv("DATABASE_URL", "not set")}
+
+"""
 import docs_parser
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -91,7 +118,7 @@ async def upload_file(file: UploadFile,
 # Optional: Add an endpoint to convert files to new format
 @app.post("/convert/{file_id}")
 async def convert_file(file_id: str, new_format: str = "txt"):
-    """Convert an uploaded file to new format"""
+    # Convert an uploaded file to new format
     # Find the original file
     uploads_dir = "uploads/raw"
     original_file = None
@@ -129,3 +156,4 @@ if __name__ == "__main__":
 # print(docs_parser.get_text("parser/assets/text_from_img.png"))
 # print(docs_parser.get_text("parser/assets/main.typ"))
 # print(docs_parser.get_text("parser/assets/main.pdf"))
+"""

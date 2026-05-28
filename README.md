@@ -20,10 +20,7 @@ sudo pacman -Syu --needed --noconfirm build-essential pkgconf clang llvm \
 - maturin:
   ```bash
   # Запускаете .venv
-  pip install maturin
-  pip install fastapi
-  pip install python-multipart
-  pip install uvicorn
+  pip install -r ./requirements.txt
   ```
 ## Как запускать? (работа только в .venv окружении)
 - Билдим rust либу
