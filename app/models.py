@@ -1,7 +1,7 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, JSON, BigInteger
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, BigInteger, Index
+from sqlalchemy.dialects.postgresql import UUID, JSONB  # <-- Импортируем JSONB
 from app.database import Base
 
 class User(Base):
@@ -23,7 +23,7 @@ class Document(Base):
     size_bytes = Column(BigInteger)
     description = Column(String)
     file_path = Column(String)
-    is_available_to = Column(JSON)   # список ID пользователей
+    is_available_to = Column(JSONB)  # список ID пользователей, имеющих доступ
 
 class Chunk(Base):
     __tablename__ = "chunks"
@@ -31,7 +31,16 @@ class Chunk(Base):
     document_id = Column(UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"))
     chunk_index = Column(Integer)
     text = Column(String)
-    keywords = Column(JSON)   # список строк
+    keywords = Column(JSONB)       # список ключевых слов (строк)
     language = Column(String)
     start_char = Column(Integer)
     end_char = Column(Integer)
+
+# Индексы для производительности
+Index("idx_chunks_document_id", Chunk.document_id)
+Index(
+    "idx_chunks_keywords_gin",
+    Chunk.keywords,
+    postgresql_using="gin",
+    postgresql_ops={"keywords": "jsonb_ops"}
+)
