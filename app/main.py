@@ -29,6 +29,11 @@ def root():
 def health():
     return {"status": "healthy", "database_url": os.getenv("DATABASE_URL", "not set")}
 
+@app.post("/search")
+async def search(query: str, top_k: int = 10):
+    from app.search import search_by_query
+    return await search_by_query(query, top_k)
+
 """
 import docs_parser
 from fastapi import FastAPI, File, UploadFile

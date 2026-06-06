@@ -1,64 +1,40 @@
 services:
   postgres:
-    image: postgres:15
+    image: pgvector/pgvector:pg15   # используем готовый образ с pgvector (опционально, но можно оставить обычный postgres, если pgvector не нужен)
     container_name: docs_postgres
-    env_file:
-      - .env
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-docs_db}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: docs_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-docs_db}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d docs_db"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
       - docs_network
 
-  solr:
-    image: solr:9.1
-    container_name: docs_solr
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: docs_qdrant
     ports:
-      - "8983:8983"
+      - "6333:6333"   # REST API
+      - "6334:6334"   # gRPC API (опционально)
     volumes:
-      - solr_data:/var/solr
-    command:
-      - bash
-      - -c
-      - |
-        precreate-core chunks
-        cp -r /opt/solr/server/solr/configsets/_default/conf/* /var/solr/data/chunks/conf/
-        curl -X POST -H 'Content-type:application/json' --data-binary '{"add-field":{"name":"embedding","type":"dense_vector","indexed":true,"stored":true,"dimensions":312}}' http://localhost:8983/solr/chunks/schema
+      - qdrant_storage:/qdrant/storage
     networks:
       - docs_network
 
-  # backend - временно закомментирован для локальной разработки
-  # backend:
-  #   build: .
-  #   container_name: docs_backend
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     solr:
-  #       condition: service_started
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     DATABASE_URL: postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-docs_db}
-  #     SOLR_URL: http://solr:8983/solr/chunks
-  #   networks:
-  #     - docs_network
+  # solr временно отключаем (можно закомментировать или удалить)
+  # solr: ...
 
 volumes:
   postgres_data:
-  solr_data:
+  qdrant_storage:
 
 networks:
   docs_network:

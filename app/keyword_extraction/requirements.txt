@@ -1,0 +1,5 @@
+sentence-transformers
+keybert
+numpy
+nltk
+pymorphy3
