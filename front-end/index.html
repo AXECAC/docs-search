@@ -1,705 +1,650 @@
 <!DOCTYPE html>
 <html lang="en">
-<!--not-for-production-->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Parser - Extract Text from Documents</title>
+    <title>Enterprise Docs Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-gradient);
+            color: var(--text-main);
             min-height: 100vh;
-            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
         }
 
+        /* Glassmorphism utility */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+        }
+
+        /* Navbar */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            outline: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Container */
         .container {
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            width: 100%;
+            flex: 1;
         }
 
-        .card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 32px;
-            margin-bottom: 24px;
+        /* Views */
+        .view {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
         }
 
-        h1 {
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 28px;
+        .view.active {
+            display: block;
         }
 
-        h3 {
-            color: #333;
-            margin-bottom: 16px;
-            font-size: 20px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .subtitle {
-            color: #666;
-            margin-bottom: 24px;
-            font-size: 14px;
+        /* Auth Form */
+        .auth-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            padding: 2rem;
+            text-align: center;
         }
 
+        .auth-container h2 {
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .input-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .auth-toggle {
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .auth-toggle:hover {
+            color: var(--primary);
+        }
+
+        /* Dashboard */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        /* Upload Area */
         .upload-area {
-            border: 2px dashed #ddd;
+            border: 2px dashed var(--glass-border);
             border-radius: 12px;
-            padding: 40px;
+            padding: 3rem 2rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: #fafafa;
+            background: rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
         }
 
-        .upload-area:hover {
-            border-color: #667eea;
-            background: #f5f3ff;
-        }
-
-        .upload-area.drag-over {
-            border-color: #667eea;
-            background: #ede9fe;
-        }
-
-        .file-input {
-            display: none;
+        .upload-area:hover, .upload-area.drag-over {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
         }
 
         .upload-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
+            font-size: 3rem;
+            margin-bottom: 1rem;
         }
 
-        .upload-text {
-            color: #666;
-            margin-bottom: 8px;
+        /* Documents Grid */
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
         }
 
-        .upload-hint {
-            color: #999;
-            font-size: 12px;
+        .doc-card {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: transform 0.2s ease;
         }
 
-        .checkbox-container {
-            margin: 20px 0;
+        .doc-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .doc-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            word-break: break-all;
+        }
+
+        .doc-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Toasts */
+        #toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+
+        .toast {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease forwards;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 0.5rem;
         }
 
-        .checkbox-container input {
+        .toast.success { background: var(--success); color: #fff; }
+        .toast.error { background: var(--danger); color: #fff; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .spinner {
             width: 20px;
             height: 20px;
-            cursor: pointer;
-        }
-
-        .checkbox-container label {
-            color: #333;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .file-info {
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .file-info.show {
-            display: block;
-        }
-
-        .file-name {
-            font-weight: 600;
-            color: #166534;
-            margin-bottom: 8px;
-        }
-
-        .file-size {
-            font-size: 12px;
-            color: #15803d;
-        }
-
-        .result {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .result.show {
-            display: block;
-        }
-
-        .result-title {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 12px;
-            font-size: 18px;
-        }
-
-        .result-content {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 12px;
-            font-size: 14px;
-            color: #4b5563;
-            word-wrap: break-word;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-
-        .status-uploaded {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-parsed {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 12px;
-            font-size: 14px;
-        }
-
-        .success {
-            background: #d1fae5;
-            color: #065f46;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 12px;
-            font-size: 14px;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: white;
             animation: spin 0.8s ease infinite;
-            margin-right: 8px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        .button-text {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .get-text-section {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .get-text-input {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .get-text-input input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .get-text-input button {
-            width: auto;
-            padding: 10px 20px;
-        }
-
-        .text-output {
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin-top: 20px;
-            border: 1px solid #e5e7eb;
-        }
-
-        .text-header {
-            background: #e5e7eb;
-            padding: 12px;
-            border-radius: 8px 8px 0 0;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .text-body {
-            padding: 16px;
-            max-height: 500px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.5;
-            background: white;
-            border-radius: 0 0 8px 8px;
-        }
-
-        .copy-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            width: auto;
-        }
-
-        .copy-btn:hover {
-            background: #5a67d8;
-            transform: none;
-        }
-
-        .recent-files {
-            margin-top: 20px;
-        }
-
-        .recent-file-item {
-            padding: 10px;
-            background: #f9fafb;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .recent-file-item:hover {
-            background: #f3f4f6;
-        }
-
-        .file-path {
-            font-size: 12px;
-            color: #6b7280;
-            font-family: monospace;
-        }
-
-        .badge {
-            background: #e5e7eb;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-        }
-
-        .image-info {
-            background: #e0e7ff;
-            padding: 8px 12px;
-            border-radius: 6px;
-            margin-top: 12px;
-            font-size: 13px;
-        }
     </style>
 </head>
 <body>
+
+    <header>
+        <div class="logo">DocsSearch</div>
+        <div class="nav-actions" id="nav-actions">
+            <!-- Dynamically populated -->
+        </div>
+    </header>
+
     <div class="container">
-        <div class="card">
-            <h1>📄 Document Text Extractor</h1>
-            <p class="subtitle">Upload documents, images, and PDFs to extract text content</p>
-
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📁</div>
-                <div class="upload-text">Click or drag & drop to upload</div>
-                <div class="upload-hint">Supports: PDF, DOCX, PPTX, PNG, JPG, TYP, and more</div>
-                <input type="file" id="fileInput" class="file-input">
-            </div>
-
-            <div class="checkbox-container">
-                <input type="checkbox" id="parseImmediately" checked>
-                <label for="parseImmediately">Extract text immediately after upload</label>
-            </div>
-
-            <button id="uploadBtn">Upload & Extract Text</button>
-
-            <div id="fileInfo" class="file-info"></div>
-            <div id="result" class="result"></div>
+        <!-- Auth View -->
+        <div id="auth-view" class="view active glass auth-container">
+            <h2 id="auth-title">Login</h2>
+            <form id="auth-form">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="username" class="input-control" required autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" class="input-control" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="auth-submit">Login</button>
+            </form>
+            <div class="auth-toggle" id="auth-toggle">Don't have an account? Register</div>
         </div>
 
-        <div class="card">
-            <h3>🔍 Extract Text from File</h3>
-            <div class="get-text-section">
-                <div class="get-text-input">
-                    <input type="text" id="sourcePath" placeholder="Enter file path (e.g., uploads/raw/filename.pptx or /path/to/document.pdf)">
-                    <button id="getTextBtn">Extract Text</button>
-                </div>
-                
-                <div id="extractedText" class="text-output" style="display: none;">
-                    <div class="text-header">
-                        <span>📝 Extracted Text</span>
-                        <button id="copyTextBtn" class="copy-btn">Copy to Clipboard</button>
-                    </div>
-                    <div id="textContent" class="text-body"></div>
-                    <div id="metadata" style="padding: 12px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;"></div>
-                </div>
-                
-                <div id="errorMessage" style="display: none;"></div>
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view">
+            <div class="dashboard-header">
+                <h2>Your Documents</h2>
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    + Upload File
+                </button>
             </div>
-        </div>
 
-        <div class="card" id="recentCard" style="display: none;">
-            <h3>📋 Recently Processed Files</h3>
-            <div id="recentFiles" class="recent-files"></div>
+            <div class="upload-area glass" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <h3>Drag & Drop files here</h3>
+                <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 0.875rem;">Supports PDF, DOCX, PPTX, XLSX, TXT, Images</p>
+                <input type="file" id="fileInput" style="display: none;">
+            </div>
+
+            <div class="docs-grid" id="docs-grid">
+                <!-- Documents injected here -->
+            </div>
         </div>
     </div>
 
+    <div id="toast-container"></div>
+
     <script>
-        const API_BASE_URL = 'http://localhost:8000';
+        const API_URL = 'http://localhost:8000';
         
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const parseImmediately = document.getElementById('parseImmediately');
-        const fileInfoDiv = document.getElementById('fileInfo');
-        const resultDiv = document.getElementById('result');
-        const sourcePathInput = document.getElementById('sourcePath');
-        const getTextBtn = document.getElementById('getTextBtn');
-        const extractedTextDiv = document.getElementById('extractedText');
-        const textContentDiv = document.getElementById('textContent');
-        const copyTextBtn = document.getElementById('copyTextBtn');
-        const metadataDiv = document.getElementById('metadata');
-        const recentCard = document.getElementById('recentCard');
-        const recentFilesDiv = document.getElementById('recentFiles');
-
-        let selectedFile = null;
-        let recentFiles = JSON.parse(localStorage.getItem('recentFiles') || '[]');
-
-        // Display recent files
-        function updateRecentFiles() {
-            if (recentFiles.length > 0) {
-                recentCard.style.display = 'block';
-                recentFilesDiv.innerHTML = recentFiles.map(file => `
-                    <div class="recent-file-item" onclick="loadRecentFile('${file.path}')">
-                        <div>
-                            <strong>${file.name}</strong>
-                            <div class="file-path">${file.path}</div>
-                        </div>
-                        <span class="badge">${new Date(file.timestamp).toLocaleTimeString()}</span>
-                    </div>
-                `).join('');
-            }
-        }
-
-        // Load recent file
-        window.loadRecentFile = function(path) {
-            sourcePathInput.value = path;
-            extractTextFromPath(path);
+        // State
+        let state = {
+            isAuthenticated: false,
+            isLoginMode: true,
+            user: null,
+            documents: []
         };
 
-        // Add to recent files
-        function addToRecentFiles(filename, filepath) {
-            recentFiles.unshift({
-                name: filename,
-                path: filepath,
-                timestamp: Date.now()
-            });
-            recentFiles = recentFiles.slice(0, 10); // Keep last 10
-            localStorage.setItem('recentFiles', JSON.stringify(recentFiles));
-            updateRecentFiles();
-        }
-
-        // Extract text from path
-        async function extractTextFromPath(source) {
-            getTextBtn.disabled = true;
-            getTextBtn.innerHTML = '<span class="button-text"><span class="loading"></span>Extracting...</span>';
-            extractedTextDiv.style.display = 'none';
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/items/?source=${encodeURIComponent(source)}`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                // Display extracted text
-                extractedTextDiv.style.display = 'block';
-                
-                const text = data.text || 'No text content extracted';
-                textContentDiv.innerHTML = text || '<em>No text content found in this file</em>';
-                
-                // Display metadata
-                let metadataHtml = `<strong>File:</strong> ${source}<br>`;
-                if (data.has_images) {
-                    metadataHtml += `<strong>📸 Images:</strong> ${data.image_count} image(s) extracted<br>`;
-                }
-                metadataHtml += `<strong>Characters:</strong> ${text.length.toLocaleString()}<br>`;
-                metadataHtml += `<strong>Words:</strong> ${text.split(/\s+/).filter(w => w.length > 0).length.toLocaleString()}`;
-                metadataDiv.innerHTML = metadataHtml;
-                
-                // Add to recent files
-                const filename = source.split('/').pop();
-                addToRecentFiles(filename, source);
-                
-            } catch (error) {
-                console.error('Error extracting text:', error);
-                extractedTextDiv.style.display = 'none';
-                const errorDiv = document.getElementById('errorMessage');
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = `<div class="error">❌ ${error.message}<br><br>
-                    <strong>Tips:</strong><br>
-                    - Make sure the file path is correct<br>
-                    - Try uploading the file first using the upload form above<br>
-                    - Check that the file format is supported (.pdf, .docx, .pptx, .png, .jpg, .typ)<br>
-                    - Enable "Extract text immediately" when uploading
-                </div>`;
-                setTimeout(() => {
-                    errorDiv.style.display = 'none';
-                }, 8000);
-            } finally {
-                getTextBtn.disabled = false;
-                getTextBtn.innerHTML = 'Extract Text';
-            }
-        }
-
-        // Upload area click handlers
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('drag-over');
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('drag-over');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('drag-over');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                selectedFile = files[0];
-                displayFileInfo(selectedFile);
-            }
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                selectedFile = e.target.files[0];
-                displayFileInfo(selectedFile);
-            }
-        });
-
-        function displayFileInfo(file) {
-            const fileSize = (file.size / 1024).toFixed(2);
-            fileInfoDiv.innerHTML = `
-                <div class="file-name">📎 ${file.name}</div>
-                <div class="file-size">${fileSize} KB</div>
-            `;
-            fileInfoDiv.classList.add('show');
-        }
-
-        uploadBtn.addEventListener('click', async () => {
-            if (!selectedFile) {
-                showError('Please select a file first', 'result');
-                return;
-            }
-
-            uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '<span class="button-text"><span class="loading"></span>Uploading...</span>';
-
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-            formData.append('parse_immediatly', parseImmediately.checked);
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-
-                const data = await response.json();
-                
-                // Show upload result
-                const statusClass = data.status === 'parsed' ? 'status-parsed' : 'status-uploaded';
-                const statusText = data.status === 'parsed' ? '✓ Text Extracted' : '📤 Uploaded';
-                
-                resultDiv.innerHTML = `
-                    <div class="status-badge ${statusClass}">${statusText}</div>
-                    <div class="result-title">File Information</div>
-                    <div class="result-content">
-                        <strong>File ID:</strong> ${data.file_id}<br>
-                        <strong>Original Filename:</strong> ${data.original_filename}<br>
-                        ${data.parsed_file_path ? `<strong>Parsed Path:</strong> ${data.parsed_file_path}<br>` : ''}
-                        <strong>Status:</strong> ${data.status}
-                    </div>
-                `;
-                resultDiv.classList.add('show');
-                
-                // If parsed immediately, extract and display text
-                if (parseImmediately.checked) {
-                    const filePath = `uploads/raw/${data.file_id}_${selectedFile.name}`;
-                    sourcePathInput.value = filePath;
-                    await extractTextFromPath(filePath);
-                } else {
-                    // Set the path for manual extraction
-                    const filePath = `uploads/raw/${data.file_id}_${selectedFile.name}`;
-                    sourcePathInput.value = filePath;
-                    sourcePathInput.placeholder = "Click 'Extract Text' to parse this file";
-                    showSuccess('File uploaded successfully! Click "Extract Text" to parse it.', 'result');
-                }
-                
-                // Reset file selection
-                selectedFile = null;
-                fileInput.value = '';
-                fileInfoDiv.classList.remove('show');
-                
-            } catch (error) {
-                console.error('Upload error:', error);
-                showError(`Upload failed: ${error.message}`, 'result');
-            } finally {
-                uploadBtn.disabled = false;
-                uploadBtn.innerHTML = 'Upload & Extract Text';
-            }
-        });
-
-        getTextBtn.addEventListener('click', async () => {
-            const source = sourcePathInput.value.trim();
-            
-            if (!source) {
-                showError('Please enter a file path', 'errorMessage');
-                return;
-            }
-            
-            await extractTextFromPath(source);
-        });
-
-        // Copy text to clipboard
-        copyTextBtn.addEventListener('click', async () => {
-            const text = textContentDiv.innerText;
-            try {
-                await navigator.clipboard.writeText(text);
-                const originalText = copyTextBtn.textContent;
-                copyTextBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyTextBtn.textContent = originalText;
-                }, 2000);
-            } catch (err) {
-                console.error('Failed to copy:', err);
-                showError('Failed to copy to clipboard', 'errorMessage');
-            }
-        });
-
-        function showError(message, targetId) {
-            const target = document.getElementById(targetId);
-            if (targetId === 'errorMessage') {
-                target.style.display = 'block';
-                target.innerHTML = `<div class="error">❌ ${message}</div>`;
-                setTimeout(() => {
-                    target.style.display = 'none';
-                }, 5000);
-            } else {
-                target.innerHTML = `<div class="error">❌ ${message}</div>`;
-                target.classList.add('show');
-                setTimeout(() => {
-                    target.classList.remove('show');
-                }, 5000);
-            }
-        }
-
-        function showSuccess(message, targetId) {
-            const target = document.getElementById(targetId);
-            target.innerHTML = `<div class="success">✓ ${message}</div>`;
-            target.classList.add('show');
+        // DOM Elements
+        const views = {
+            auth: document.getElementById('auth-view'),
+            dashboard: document.getElementById('dashboard-view')
+        };
+        const navActions = document.getElementById('nav-actions');
+        
+        // --- Utility: Toasts ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = message;
+            container.appendChild(toast);
             setTimeout(() => {
-                target.classList.remove('show');
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
 
-        // Test API connection on load
-        async function testConnection() {
+        // --- Utility: API Fetch with Interceptor ---
+        async function apiFetch(endpoint, options = {}) {
+            const token = localStorage.getItem('access_token');
+            const headers = { ...options.headers };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            // Do not set Content-Type if body is FormData
+            if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+                headers['Content-Type'] = 'application/json';
+            }
+
             try {
-                const response = await fetch(`${API_BASE_URL}/`);
-                if (response.ok) {
-                    console.log('✅ Connected to backend');
-                    showSuccess('Connected to backend successfully!', 'result');
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
+                let response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
+                
+                // Handle token expiration / 401
+                if (response.status === 401 && token) {
+                    const refreshed = await refreshToken();
+                    if (refreshed) {
+                        headers['Authorization'] = `Bearer ${localStorage.getItem('access_token')}`;
+                        response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
+                    } else {
+                        logout();
+                        throw new Error("Session expired. Please login again.");
+                    }
                 }
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({ detail: response.statusText }));
+                    throw new Error(err.detail || "API Error");
+                }
+
+                return await response.json();
             } catch (error) {
-                console.error('❌ Cannot connect to backend');
-                showError('Cannot connect to backend. Please make sure the server is running on http://localhost:8000', 'result');
+                showToast(error.message, 'error');
+                throw error;
             }
         }
 
-        // Initialize
-        updateRecentFiles();
-        testConnection();
+        // --- Auth Functions ---
+        async function refreshToken() {
+            const refresh = localStorage.getItem('refresh_token');
+            if (!refresh) return false;
+            try {
+                const res = await fetch(`${API_URL}/auth/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refresh_token: refresh })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('refresh_token', data.refresh_token);
+                    return true;
+                }
+            } catch(e) {}
+            return false;
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            state.isAuthenticated = false;
+            state.user = null;
+            render();
+        }
+
+        async function checkAuth() {
+            if (localStorage.getItem('access_token')) {
+                try {
+                    state.user = await apiFetch('/auth/me');
+                    state.isAuthenticated = true;
+                } catch(e) {
+                    logout();
+                }
+            }
+            render();
+        }
+
+        // --- Document Functions ---
+        async function fetchDocuments() {
+            try {
+                state.documents = await apiFetch('/documents');
+                renderDocuments();
+            } catch(e) { console.error(e); }
+        }
+
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            showToast('Uploading...', 'success');
+            try {
+                await apiFetch('/documents/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                showToast('File uploaded successfully!');
+                fetchDocuments();
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function deleteDocument(id) {
+            if(!confirm("Are you sure you want to delete this document?")) return;
+            try {
+                await apiFetch(`/documents/${id}`, { method: 'DELETE' });
+                showToast('Document deleted');
+                fetchDocuments();
+            } catch(e) { console.error(e); }
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('auth-toggle').addEventListener('click', () => {
+            state.isLoginMode = !state.isLoginMode;
+            document.getElementById('auth-title').innerText = state.isLoginMode ? 'Login' : 'Register';
+            document.getElementById('auth-submit').innerText = state.isLoginMode ? 'Login' : 'Create Account';
+            document.getElementById('auth-toggle').innerText = state.isLoginMode ? "Don't have an account? Register" : "Already have an account? Login";
+        });
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('auth-submit');
+            btn.innerHTML = '<div class="spinner"></div>';
+            btn.disabled = true;
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                if (state.isLoginMode) {
+                    // Login uses OAuth2 Form
+                    const fd = new FormData();
+                    fd.append('username', username);
+                    fd.append('password', password);
+                    const data = await fetch(`${API_URL}/auth/login`, { method: 'POST', body: fd }).then(async r => {
+                        if(!r.ok) throw new Error((await r.json()).detail);
+                        return r.json();
+                    });
+                    localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('refresh_token', data.refresh_token);
+                } else {
+                    // Register
+                    await fetch(`${API_URL}/auth/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    }).then(async r => {
+                        if(!r.ok) throw new Error((await r.json()).detail);
+                    });
+                    showToast("Registered successfully. Please login.");
+                    state.isLoginMode = true;
+                    render();
+                    btn.innerHTML = 'Login';
+                    btn.disabled = false;
+                    return;
+                }
+                
+                await checkAuth();
+                showToast(`Welcome, ${state.user.username}!`);
+            } catch(e) {
+                showToast(e.message, 'error');
+            } finally {
+                btn.innerHTML = state.isLoginMode ? 'Login' : 'Create Account';
+                btn.disabled = false;
+            }
+        });
+
+        // Drag & Drop
+        const dropArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.add('drag-over'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.remove('drag-over'), false);
+        });
+
+        dropArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if(files.length) uploadFile(files[0]);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if(e.target.files.length) uploadFile(e.target.files[0]);
+        });
+
+        // --- Render ---
+        function formatBytes(bytes, decimals = 2) {
+            if (!+bytes) return '0 Bytes';
+            const k = 1024, dm = decimals < 0 ? 0 : decimals, sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+        }
+
+        function renderDocuments() {
+            const grid = document.getElementById('docs-grid');
+            if(state.documents.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-muted);">No documents found.</p>';
+                return;
+            }
+            
+            grid.innerHTML = state.documents.map(doc => `
+                <div class="doc-card glass">
+                    <div class="doc-header">
+                        <div class="doc-title">${doc.title || 'Untitled'}</div>
+                        <span class="badge">${doc.extension ? doc.extension.toUpperCase() : 'UNKNOWN'}</span>
+                    </div>
+                    <div class="doc-meta">
+                        <span>Size: ${formatBytes(doc.size_bytes)}</span>
+                        <span>Date: ${new Date(doc.upload_date).toLocaleDateString()}</span>
+                    </div>
+                    <div style="margin-top: auto; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        ${(state.user.role === 'admin' || state.user.id === doc.uploader_id) ? 
+                            `<button class="btn btn-danger" onclick="deleteDocument('${doc.id}')">Delete</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function render() {
+            if (state.isAuthenticated) {
+                views.auth.classList.remove('active');
+                views.dashboard.classList.add('active');
+                navActions.innerHTML = `
+                    <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">
+                        ${state.user.role.toUpperCase()}
+                    </span>
+                    <span>${state.user.username}</span>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                `;
+                fetchDocuments();
+            } else {
+                views.dashboard.classList.remove('active');
+                views.auth.classList.add('active');
+                navActions.innerHTML = '';
+            }
+        }
+
+        // Init
+        checkAuth();
     </script>
 </body>
 </html>

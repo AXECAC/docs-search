@@ -14,10 +14,11 @@ logger = logging.getLogger(__name__)
 chunker = ParagraphProcessor(max_chunk_size=1000, overlap=200)
 kw_processor = KeywordProcessor()
 
+import docs_parser
+
 async def process_document(document_id: str, file_path: str, metadata: dict = None):
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            raw_text = f.read()
+        raw_text, _ = docs_parser.extract_text(file_path)
     except Exception as e:
         logger.error(f"Failed to read file {file_path}: {e}")
         return

@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from app.database import engine, Base
@@ -73,17 +74,21 @@ app.add_middleware(
 # ──────────────────────────────────────────
 
 from app.auth import router as auth_router  # noqa: E402
+from app.documents import router as docs_router
 
 app.include_router(auth_router)
+app.include_router(docs_router)
 
 
 # ──────────────────────────────────────────
 # Системные эндпоинты
 # ──────────────────────────────────────────
 
-@app.get("/", tags=["system"])
+@app.get("/api", tags=["system"])
 def root():
     return {"status": "ok", "message": "Docs Search API is running"}
+
+app.mount("/ui", StaticFiles(directory="front-end", html=True), name="static")
 
 
 @app.get("/health", tags=["system"])

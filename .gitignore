@@ -5,6 +5,6 @@ lib/
 *lib64*
 target/
 share/
-.env
+.env*
 pyvenv.cfg
 tree.txt
