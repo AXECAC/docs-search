@@ -11,6 +11,10 @@
 
     <header>
         <div class="logo">DocsSearch</div>
+        <nav class="tab-nav" id="tab-nav" style="display: none;">
+            <button class="tab-btn active" data-tab="dashboard">📁 Documents</button>
+            <button class="tab-btn" data-tab="search">🔍 Search</button>
+        </nav>
         <div class="nav-actions" id="nav-actions">
             <!-- Dynamically populated -->
         </div>
@@ -45,7 +49,7 @@
 
             <div class="upload-area glass" id="uploadArea">
                 <div class="upload-icon">📄</div>
-                <h3>Drag & Drop files here</h3>
+                <h3>Drag &amp; Drop files here</h3>
                 <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 0.875rem;">Supports PDF, DOCX, PPTX, XLSX, TXT, Images</p>
                 <input type="file" id="fileInput" style="display: none;">
             </div>
@@ -53,6 +57,27 @@
             <div class="docs-grid" id="docs-grid">
                 <!-- Documents injected here -->
             </div>
+        </div>
+
+        <!-- Search View -->
+        <div id="search-view" class="view">
+            <div class="dashboard-header">
+                <h2>Search Documents</h2>
+            </div>
+
+            <form id="search-form" class="search-bar glass">
+                <input
+                    type="text"
+                    id="search-input"
+                    class="search-input"
+                    placeholder="Search your documents..."
+                    autocomplete="off"
+                >
+                <button type="submit" class="btn btn-primary search-btn">Search</button>
+            </form>
+
+            <div id="search-state" class="search-state" style="display:none;"></div>
+            <div id="search-results" class="search-results"></div>
         </div>
     </div>
 

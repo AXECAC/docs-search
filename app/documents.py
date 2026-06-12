@@ -8,12 +8,17 @@ import shutil
 
 from app.database import get_db
 from app.models import User, Document, Chunk
-from app.schemas import DocumentResponse, DocumentUploadResponse, DocumentUpdateRequest, ChunkResponse
+from app.schemas import (
+    DocumentResponse, DocumentUploadResponse, DocumentUpdateRequest,
+    ChunkResponse, SearchRequest, SearchResultItem,
+)
 from app.auth import get_current_user
 from app.document_processor import process_document
 from app.qdrant_client import delete_chunks_by_document
+from app.search import hybrid_search
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+
 
 UPLOAD_DIR = "uploads/raw"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -207,3 +212,24 @@ async def delete_document(
     await db.commit()
     
     return {"status": "deleted"}
+
+
+@router.post("/search", response_model=list[SearchResultItem])
+async def search_documents(
+    request: SearchRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Гибридный поиск по документам пользователя.
+    Комбинирует семантический поиск (Qdrant) и поиск по ключевым словам (PostgreSQL).
+    """
+    if not request.query.strip():
+        raise HTTPException(status_code=400, detail="Query must not be empty")
+    results = await hybrid_search(
+        query=request.query,
+        current_user=current_user,
+        db=db,
+        top_k=request.top_k,
+    )
+    return results

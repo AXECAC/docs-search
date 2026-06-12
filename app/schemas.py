@@ -87,3 +87,22 @@ class ChunkResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ──────────────────────────────────────────
+# Поиск
+# ──────────────────────────────────────────
+
+class SearchRequest(BaseModel):
+    query: str
+    top_k: int = 10
+
+
+class SearchResultItem(BaseModel):
+    chunk_id: str
+    document_id: str
+    document_title: str
+    extension: str | None = None
+    text: str
+    keywords: list[str] | None = None
+    score: float
