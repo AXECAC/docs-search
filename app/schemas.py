@@ -106,3 +106,11 @@ class SearchResultItem(BaseModel):
     text: str
     keywords: list[str] | None = None
     score: float
+
+
+# ──────────────────────────────────────────
+# Чат (RAG)
+# ──────────────────────────────────────────
+
+class ChatRequest(BaseModel):
+    query: str

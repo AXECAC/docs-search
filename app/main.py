@@ -75,9 +75,11 @@ app.add_middleware(
 
 from app.auth import router as auth_router  # noqa: E402
 from app.documents import router as docs_router
+from app.chat import router as chat_router
 
 app.include_router(auth_router)
 app.include_router(docs_router)
+app.include_router(chat_router)
 
 
 # ──────────────────────────────────────────

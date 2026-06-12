@@ -14,6 +14,7 @@
         <nav class="tab-nav" id="tab-nav" style="display: none;">
             <button class="tab-btn active" data-tab="dashboard">📁 Documents</button>
             <button class="tab-btn" data-tab="search">🔍 Search</button>
+            <button class="tab-btn" data-tab="chat">💬 AI Chat</button>
         </nav>
         <div class="nav-actions" id="nav-actions">
             <!-- Dynamically populated -->
@@ -78,6 +79,33 @@
 
             <div id="search-state" class="search-state" style="display:none;"></div>
             <div id="search-results" class="search-results"></div>
+        </div>
+
+        <!-- Chat View -->
+        <div id="chat-view" class="view chat-view">
+            <div class="dashboard-header" style="margin-bottom: 1rem;">
+                <h2>AI Chat Assistant</h2>
+            </div>
+            
+            <div class="chat-container glass">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-message assistant">
+                        <div class="message-content">Здравствуйте! Я ваш ИИ-ассистент. Задайте мне вопрос по загруженным корпоративным документам.</div>
+                    </div>
+                </div>
+                
+                <form id="chat-form" class="chat-input-area">
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        class="search-input" 
+                        placeholder="Ask a question..." 
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="submit" class="btn btn-primary search-btn" id="chat-submit-btn">Send</button>
+                </form>
+            </div>
         </div>
     </div>
 
