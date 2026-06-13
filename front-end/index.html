@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enterprise Docs Search</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1781384500">
 </head>
 <body>
 
@@ -15,6 +15,7 @@
             <button class="tab-btn active" data-tab="dashboard">📁 Documents</button>
             <button class="tab-btn" data-tab="search">🔍 Search</button>
             <button class="tab-btn" data-tab="chat">💬 AI Chat</button>
+            <button class="tab-btn admin-only" data-tab="groups" style="display:none;">👥 Groups</button>
         </nav>
         <div class="nav-actions" id="nav-actions">
             <!-- Dynamically populated -->
@@ -43,17 +44,11 @@
         <div id="dashboard-view" class="view">
             <div class="dashboard-header">
                 <h2>Your Documents</h2>
-                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                <button class="btn btn-primary" id="open-upload-modal-btn">
                     + Upload File
                 </button>
             </div>
 
-            <div class="upload-area glass" id="uploadArea">
-                <div class="upload-icon">📄</div>
-                <h3>Drag &amp; Drop files here</h3>
-                <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 0.875rem;">Supports PDF, DOCX, PPTX, XLSX, TXT, Images</p>
-                <input type="file" id="fileInput" style="display: none;">
-            </div>
 
             <div class="docs-grid" id="docs-grid">
                 <!-- Documents injected here -->
@@ -79,6 +74,17 @@
 
             <div id="search-state" class="search-state" style="display:none;"></div>
             <div id="search-results" class="search-results"></div>
+        </div>
+
+        <!-- Groups View (admin only) -->
+        <div id="groups-view" class="view">
+            <div class="dashboard-header">
+                <h2>👥 Group Management</h2>
+                <button class="btn btn-primary" id="create-group-btn">+ New Group</button>
+            </div>
+            <div id="groups-list" class="groups-list">
+                <!-- Groups rendered here -->
+            </div>
         </div>
 
         <!-- Chat View -->
@@ -111,6 +117,29 @@
 
     <div id="toast-container"></div>
 
-    <script src="app.js"></script>
+    <!-- Document Preview Modal -->
+    <div id="doc-modal" class="doc-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="doc-modal-backdrop" onclick="closeDocModal()"></div>
+        <div class="doc-modal-panel glass">
+            <div class="doc-modal-header">
+                <div class="doc-modal-title-wrap">
+                    <span class="doc-modal-icon" id="modal-icon">📄</span>
+                    <span class="doc-modal-title" id="modal-title">Document</span>
+                </div>
+                <div class="doc-modal-actions">
+                    <a id="modal-download-btn" class="btn btn-outline" href="#" download>⬇ Download</a>
+                    <button class="btn btn-outline" onclick="closeDocModal()">✕ Close</button>
+                </div>
+            </div>
+            <div class="doc-modal-body" id="modal-body">
+                <!-- iframe or download prompt injected here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="upload-modal" class="doc-modal" style="display:none;"></div>
+    <div id="group-modal" class="doc-modal" style="display:none;"></div>
+
+    <script src="app.js?v=1781385600"></script>
 </body>
 </html>

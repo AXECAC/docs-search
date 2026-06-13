@@ -6,6 +6,8 @@ let state = {
     isLoginMode: true,
     user: null,
     documents: [],
+    groups: [],
+    users: [],
     activeTab: 'dashboard',
 };
 
@@ -15,6 +17,7 @@ const views = {
     dashboard: document.getElementById('dashboard-view'),
     search: document.getElementById('search-view'),
     chat: document.getElementById('chat-view'),
+    groups: document.getElementById('groups-view'),
 };
 const navActions = document.getElementById('nav-actions');
 const tabNav = document.getElementById('tab-nav');
@@ -138,6 +141,8 @@ function switchTab(tabName) {
 
     if (tabName === 'dashboard') {
         fetchDocuments();
+    } else if (tabName === 'groups' && state.user && state.user.role === 'admin') {
+        fetchGroups();
     }
 }
 
@@ -151,22 +156,6 @@ async function fetchDocuments() {
     } catch (e) { console.error(e); }
 }
 
-async function uploadFile(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    showToast('Uploading...', 'success');
-    try {
-        await apiFetch('/documents/upload', {
-            method: 'POST',
-            body: formData,
-        });
-        showToast('File uploaded successfully!');
-        fetchDocuments();
-    } catch (e) {
-        console.error(e);
-    }
-}
 
 async function deleteDocument(id) {
     if (!confirm('Are you sure you want to delete this document?')) return;
@@ -178,6 +167,104 @@ async function deleteDocument(id) {
 }
 
 window.deleteDocument = deleteDocument;
+
+// ─────────────────────────────────────────────────────────────
+// Document Preview Modal
+// ─────────────────────────────────────────────────────────────
+
+const INLINE_EXTS = new Set(['pdf', 'txt', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);
+
+const EXT_ICONS = {
+    pdf: '📕', txt: '📝', png: '🖼', jpg: '🖼', jpeg: '🖼', gif: '🖼',
+    webp: '🖼', svg: '🖼', docx: '📘', doc: '📘', xlsx: '📗', xls: '📗',
+    pptx: '📙', ppt: '📙',
+};
+
+async function openDocModal(documentId, documentTitle, extension) {
+    const modal = document.getElementById('doc-modal');
+    const icon = document.getElementById('modal-icon');
+    const title = document.getElementById('modal-title');
+    const body = document.getElementById('modal-body');
+    const downloadBtn = document.getElementById('modal-download-btn');
+
+    const ext = (extension || '').replace('.', '').toLowerCase();
+
+    // Показываем модалку сразу с лоадером
+    icon.textContent = EXT_ICONS[ext] || '📄';
+    title.textContent = documentTitle || 'Document';
+    body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;gap:1rem;color:var(--text-muted)">
+        <div class="spinner"></div> Загрузка...
+    </div>`;
+    downloadBtn.href = '#';
+    downloadBtn.removeAttribute('download');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    // Загружаем файл через fetch с авторизацией
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_URL}/documents/${documentId}/content`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        // Ссылка на скачивание
+        downloadBtn.href = blobUrl;
+        downloadBtn.download = documentTitle || `document.${ext}`;
+
+        // Тело модалки
+        if (INLINE_EXTS.has(ext)) {
+            body.innerHTML = `<iframe src="${blobUrl}" title="${escapeHtml(documentTitle || 'Document')}"></iframe>`;
+            // Освобождаем blob URL когда iframe загрузился
+            body.querySelector('iframe').onload = () => {};
+        } else {
+            body.innerHTML = `
+                <div class="doc-download-prompt">
+                    <div class="file-icon">${EXT_ICONS[ext] || '📄'}</div>
+                    <h3>${escapeHtml(documentTitle || 'Document')}</h3>
+                    <p>Формат <strong>.${ext.toUpperCase()}</strong> нельзя отобразить прямо в браузере.
+                    Нажмите кнопку ниже, чтобы скачать файл.</p>
+                    <a href="${blobUrl}" download="${escapeHtml(documentTitle || 'document')}"
+                       class="btn btn-primary" style="font-size: 1rem; padding: 0.75rem 2rem;">
+                       ⬇ Скачать файл
+                    </a>
+                </div>`;
+        }
+
+        // Сохраняем blobUrl для освобождения при закрытии
+        modal.dataset.blobUrl = blobUrl;
+
+    } catch (e) {
+        body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--danger)">
+            ❌ Ошибка загрузки файла: ${escapeHtml(e.message)}
+        </div>`;
+    }
+}
+
+function closeDocModal() {
+    const modal = document.getElementById('doc-modal');
+    // Освобождаем Blob URL чтобы не было утечки памяти
+    if (modal.dataset.blobUrl) {
+        URL.revokeObjectURL(modal.dataset.blobUrl);
+        delete modal.dataset.blobUrl;
+    }
+    modal.style.display = 'none';
+    document.getElementById('modal-body').innerHTML = '';
+    document.body.style.overflow = '';
+}
+window.openDocModal = openDocModal;
+window.closeDocModal = closeDocModal;
+
+// Закрытие по Esc
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDocModal();
+});
 
 // ─────────────────────────────────────────────────────────────
 // Search Functions
@@ -221,17 +308,26 @@ function renderSearchResults(results, query) {
     stateEl.style.display = 'none';
 
     container.innerHTML = results.map((r, i) => {
-        const ext = r.extension ? r.extension.toUpperCase() : '?';
+        const extRaw = (r.extension || '').replace('.', '').toLowerCase();
+        const extLabel = extRaw ? extRaw.toUpperCase() : '?';
         const scorePercent = Math.min(100, Math.round(r.score * 100));
         const keywords = (r.keywords || []).slice(0, 8);
         const snippet = r.text.length > 400 ? r.text.slice(0, 400) + '…' : r.text;
+        const docIcon = EXT_ICONS[extRaw] || '📄';
 
         return `
         <div class="result-card glass" style="animation-delay: ${i * 0.04}s">
             <div class="result-header">
                 <div class="result-source">
-                    <span class="badge">${ext}</span>
-                    <span class="doc-name">${escapeHtml(r.document_title)}</span>
+                    <span class="badge">${extLabel}</span>
+                    <span class="doc-name source-link"
+                          data-doc-id="${r.document_id}"
+                          data-doc-title="${escapeHtml(r.document_title)}"
+                          data-doc-ext="${extRaw}"
+                          onclick="openDocModal(this.dataset.docId, this.dataset.docTitle, this.dataset.docExt)"
+                          title="Открыть документ">
+                        ${docIcon} ${escapeHtml(r.document_title)}
+                    </span>
                 </div>
                 <div class="score-badge">
                     ⚡ ${scorePercent}% match
@@ -347,9 +443,20 @@ async function performChat(query) {
                     
                     if (data.type === 'sources') {
                         if (data.sources && data.sources.length > 0) {
+                            const sourceLinks = data.sources.map(s => {
+                                const ext = (s.extension || '').replace('.', '').toLowerCase();
+                                return `<span class="source-title source-link"
+                                    data-doc-id="${s.document_id}"
+                                    data-doc-title="${escapeHtml(s.document_title)}"
+                                    data-doc-ext="${ext}"
+                                    onclick="openDocModal(this.dataset.docId, this.dataset.docTitle, this.dataset.docExt)"
+                                    title="Открыть документ">
+                                    ${EXT_ICONS[ext] || '📄'} ${escapeHtml(s.document_title)}
+                                </span>`;
+                            }).join(' ');
                             sourcesHtml = `<div class="sources-box">
                                 <strong>📚 Источники:</strong><br>
-                                ${data.sources.map(s => `<span class="source-title">📄 ${escapeHtml(s.document_title)}</span>`).join(' ')}
+                                ${sourceLinks}
                             </div>`;
                             assistantMsgContent.innerHTML = sourcesHtml + fullText;
                         }
@@ -460,31 +567,6 @@ document.getElementById('search-form').addEventListener('submit', (e) => {
 });
 
 // Drag & Drop
-const dropArea = document.getElementById('uploadArea');
-const fileInput = document.getElementById('fileInput');
-
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropArea.addEventListener(eventName, preventDefaults, false);
-});
-
-function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-
-['dragenter', 'dragover'].forEach(eventName => {
-    dropArea.addEventListener(eventName, () => dropArea.classList.add('drag-over'), false);
-});
-
-['dragleave', 'drop'].forEach(eventName => {
-    dropArea.addEventListener(eventName, () => dropArea.classList.remove('drag-over'), false);
-});
-
-dropArea.addEventListener('drop', (e) => {
-    const files = e.dataTransfer.files;
-    if (files.length) uploadFile(files[0]);
-});
-
-fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length) uploadFile(e.target.files[0]);
-});
 
 // ─────────────────────────────────────────────────────────────
 // Render
@@ -504,23 +586,34 @@ function renderDocuments() {
         return;
     }
 
-    grid.innerHTML = state.documents.map(doc => `
+    grid.innerHTML = state.documents.map(doc => {
+        const extRaw = (doc.extension || '').replace('.', '').toLowerCase();
+        const extLabel = extRaw ? extRaw.toUpperCase() : 'UNKNOWN';
+        const docIcon = EXT_ICONS[extRaw] || '📄';
+        return `
         <div class="doc-card glass">
             <div class="doc-header">
-                <div class="doc-title">${escapeHtml(doc.title || 'Untitled')}</div>
-                <span class="badge">${doc.extension ? doc.extension.toUpperCase() : 'UNKNOWN'}</span>
+                <div class="doc-title">${docIcon} ${escapeHtml(doc.title || 'Untitled')}</div>
+                <span class="badge">${extLabel}</span>
             </div>
             <div class="doc-meta">
                 <span>Size: ${formatBytes(doc.size_bytes)}</span>
                 <span>Date: ${new Date(doc.upload_date).toLocaleDateString()}</span>
             </div>
             <div style="margin-top: auto; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="btn btn-outline"
+                    data-doc-id="${doc.id}"
+                    data-doc-title="${escapeHtml(doc.title || 'Untitled')}"
+                    data-doc-ext="${extRaw}"
+                    onclick="openDocModal(this.dataset.docId, this.dataset.docTitle, this.dataset.docExt)">
+                    👁 Open
+                </button>
                 ${(state.user.role === 'admin' || state.user.id === doc.uploader_id)
                     ? `<button class="btn btn-danger" onclick="deleteDocument('${doc.id}')">Delete</button>`
                     : ''}
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 function render() {
@@ -536,6 +629,11 @@ function render() {
             <button class="btn btn-outline" onclick="logout()">Logout</button>
         `;
 
+        // Toggle admin tabs
+        document.querySelectorAll('.admin-only').forEach(el => {
+            el.style.display = state.user.role === 'admin' ? 'inline-block' : 'none';
+        });
+
         switchTab(state.activeTab);
     } else {
         Object.values(views).forEach(v => v.classList.remove('active'));
@@ -544,6 +642,442 @@ function render() {
         navActions.innerHTML = '';
     }
 }
+
+
+// ─────────────────────────────────────────────────────────────
+// Upload Modal & Logic
+// ─────────────────────────────────────────────────────────────
+
+let pendingUploadFile = null;
+let selectedUploadGroups = new Set();
+let selectedUploadUsers = new Set();
+
+const openUploadBtn = document.getElementById('open-upload-modal-btn');
+if(openUploadBtn) {
+    openUploadBtn.addEventListener('click', () => openUploadModal());
+}
+
+async function openUploadModal(file = null) {
+    pendingUploadFile = file;
+    selectedUploadGroups.clear();
+    selectedUploadUsers.clear();
+
+    const modal = document.getElementById('upload-modal');
+    
+    // Fetch users/groups for dropdowns
+    if (state.user) {
+        if (!state.groups.length) await fetchGroups(false); // don't render view, just fetch
+    }
+
+    modal.innerHTML = `
+        <div class="doc-modal-panel upload-modal-panel">
+            <div class="dashboard-header" style="padding: 1.5rem; border-bottom: 1px solid var(--glass-border); margin-bottom: 0;">
+                <h3 style="margin:0;">Upload Document</h3>
+                <button class="btn btn-outline" onclick="closeUploadModal()" style="padding: 0.4rem 0.8rem;">✕</button>
+            </div>
+            <div class="upload-modal-body">
+                
+                <!-- File Drop Zone -->
+                <div class="file-drop-zone" id="modal-drop-zone" onclick="document.getElementById('modalFileInput').click()">
+                    <span class="file-drop-icon">📄</span>
+                    <h4 id="modal-drop-text">${file ? 'File selected' : 'Click or Drag & Drop file here'}</h4>
+                    <div id="modal-file-name" class="file-selected-name">${file ? file.name : ''}</div>
+                    <input type="file" id="modalFileInput" style="display: none;">
+                </div>
+
+                <!-- Title/Desc -->
+                <div class="form-group">
+                    <label>Title (optional)</label>
+                    <input type="text" id="upload-title" class="input-control" placeholder="Document title...">
+                </div>
+                <div class="form-group">
+                    <label>Description (optional)</label>
+                    <textarea id="upload-desc" placeholder="Brief description..."></textarea>
+                </div>
+
+                <!-- Access Control -->
+                <div class="form-group">
+                    <label>Access Control</label>
+                    <div class="access-toggle">
+                        <button class="access-toggle-btn active" id="btn-access-all" onclick="toggleAccessType('all')">Public (All)</button>
+                        <button class="access-toggle-btn" id="btn-access-restricted" onclick="toggleAccessType('restricted')">Restricted</button>
+                    </div>
+
+                    <div id="restricted-panel" class="access-panel">
+                        <div style="font-size:0.8rem; color:var(--text-muted);">Select groups or specific users who can access this document.</div>
+                        
+                        <label style="font-size:0.75rem;">Groups</label>
+                        <div class="tag-select-wrap" id="upload-group-list">
+                            ${state.groups.map(g => `
+                                <label class="tag-item">
+                                    <span>
+                                        <input type="checkbox" value="${g.id}" onchange="toggleUploadGroup('${g.id}', this.checked)">
+                                        ${escapeHtml(g.name)}
+                                    </span>
+                                </label>
+                            `).join('')}
+                            ${state.groups.length === 0 ? '<div style="padding:0.5rem; font-size:0.8rem; color:var(--text-muted);">No groups available</div>' : ''}
+                        </div>
+
+                        <label style="font-size:0.75rem;">Specific Users (by username)</label>
+                        <div class="search-wrap">
+                            <input type="text" class="input-control" id="upload-user-search" placeholder="Type username..." oninput="debounceUserSearch(this.value, 'upload')" style="width:100%">
+                            <div id="upload-user-results" class="search-results-dropdown" style="display:none;"></div>
+                        </div>
+                        <div class="user-chips" id="upload-selected-users"></div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="upload-modal-footer">
+                <button class="btn btn-outline" onclick="closeUploadModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitUpload()">Upload File</button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    // File input handlers
+    const dropZone = document.getElementById('modal-drop-zone');
+    const fileIn = document.getElementById('modalFileInput');
+
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            pendingUploadFile = e.dataTransfer.files[0];
+            document.getElementById('modal-drop-text').textContent = 'File selected';
+            document.getElementById('modal-file-name').textContent = pendingUploadFile.name;
+        }
+    });
+    fileIn.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            pendingUploadFile = e.target.files[0];
+            document.getElementById('modal-drop-text').textContent = 'File selected';
+            document.getElementById('modal-file-name').textContent = pendingUploadFile.name;
+        }
+    });
+}
+
+function closeUploadModal() {
+    document.getElementById('upload-modal').style.display = 'none';
+    document.body.style.overflow = '';
+    pendingUploadFile = null;
+}
+
+window.toggleAccessType = function(type) {
+    const btnAll = document.getElementById('btn-access-all');
+    const btnRestricted = document.getElementById('btn-access-restricted');
+    const panel = document.getElementById('restricted-panel');
+
+    if (type === 'all') {
+        btnAll.classList.add('active');
+        btnRestricted.classList.remove('active');
+        panel.classList.remove('visible');
+        selectedUploadGroups.clear();
+        selectedUploadUsers.clear();
+        // Uncheck all group boxes
+        document.querySelectorAll('#upload-group-list input[type="checkbox"]').forEach(cb => cb.checked = false);
+        renderUploadSelectedUsers();
+    } else {
+        btnRestricted.classList.add('active');
+        btnAll.classList.remove('active');
+        panel.classList.add('visible');
+    }
+}
+
+window.toggleUploadGroup = function(groupId, isChecked) {
+    if (isChecked) selectedUploadGroups.add(groupId);
+    else selectedUploadGroups.delete(groupId);
+}
+
+// User Search
+let userSearchTimeout = null;
+window.debounceUserSearch = function(query, context) {
+    clearTimeout(userSearchTimeout);
+    userSearchTimeout = setTimeout(() => searchUsersApi(query, context), 300);
+}
+
+async function searchUsersApi(query, context) {
+    const dropdown = document.getElementById(context === 'upload' ? 'upload-user-results' : 'group-user-results');
+    if (!query || query.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    try {
+        const users = await apiFetch(`/auth/users?q=${encodeURIComponent(query)}`);
+        if (users.length === 0) {
+            dropdown.innerHTML = '<div class="dropdown-item" style="color:var(--text-muted)">No users found</div>';
+        } else {
+            dropdown.innerHTML = users.map(u => `
+                <div class="dropdown-item" onclick="selectUser('${u.id}', '${escapeHtml(u.username)}', '${context}')">
+                    ${escapeHtml(u.username)} <span style="font-size:0.7rem; color:var(--text-muted)">(${u.role})</span>
+                </div>
+            `).join('');
+        }
+        dropdown.style.display = 'block';
+    } catch (e) {
+        console.error("User search failed", e);
+    }
+}
+
+window.selectUser = function(id, username, context) {
+    document.getElementById(context === 'upload' ? 'upload-user-results' : 'group-user-results').style.display = 'none';
+    document.getElementById(context === 'upload' ? 'upload-user-search' : 'group-user-search').value = '';
+    
+    if (context === 'upload') {
+        selectedUploadUsers.add({id, username});
+        renderUploadSelectedUsers();
+    } else {
+        selectedGroupUsers.add({id, username});
+        renderGroupSelectedUsers();
+    }
+}
+
+window.removeUploadUser = function(id) {
+    for (let u of selectedUploadUsers) {
+        if (u.id === id) { selectedUploadUsers.delete(u); break; }
+    }
+    renderUploadSelectedUsers();
+}
+
+function renderUploadSelectedUsers() {
+    const container = document.getElementById('upload-selected-users');
+    if(!container) return;
+    container.innerHTML = Array.from(selectedUploadUsers).map(u => `
+        <div class="chip">
+            👤 ${escapeHtml(u.username)}
+            <span class="chip-remove" onclick="removeUploadUser('${u.id}')">✕</span>
+        </div>
+    `).join('');
+}
+
+async function submitUpload() {
+    if (!pendingUploadFile) {
+        showToast('Please select a file first', 'error');
+        return;
+    }
+
+    const title = document.getElementById('upload-title').value.trim();
+    const desc = document.getElementById('upload-desc').value.trim();
+    
+    const formData = new FormData();
+    formData.append('file', pendingUploadFile);
+    if (title) formData.append('title', title);
+    if (desc) formData.append('description', desc);
+
+    const isRestricted = document.getElementById('btn-access-restricted').classList.contains('active');
+    if (isRestricted) {
+        if (selectedUploadUsers.size > 0) {
+            formData.append('is_available_to', Array.from(selectedUploadUsers).map(u => u.id).join(','));
+        }
+        if (selectedUploadGroups.size > 0) {
+            formData.append('available_to_groups', Array.from(selectedUploadGroups).join(','));
+        }
+    }
+
+    showToast('Uploading...', 'success');
+    closeUploadModal();
+
+    try {
+        await apiFetch('/documents/upload', {
+            method: 'POST',
+            body: formData,
+        });
+        showToast('File uploaded successfully!');
+        if (state.activeTab === 'dashboard') fetchDocuments();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// Groups Management
+// ─────────────────────────────────────────────────────────────
+
+async function fetchGroups(render = true) {
+    try {
+        state.groups = await apiFetch('/groups');
+        if (render) renderGroups();
+    } catch (e) { console.error(e); }
+}
+
+function renderGroups() {
+    const container = document.getElementById('groups-list');
+    if (!container) return;
+    
+    if (state.groups.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted);">No groups found.</p>';
+        return;
+    }
+
+    container.innerHTML = state.groups.map(g => `
+        <div class="group-card glass">
+            <div class="group-card-header" onclick="toggleGroupMembers('${g.id}')">
+                <div>
+                    <div class="group-card-title">👥 ${escapeHtml(g.name)}</div>
+                    <div class="group-card-meta">${escapeHtml(g.description || 'No description')} • ${g.member_count} members</div>
+                </div>
+                <div class="group-card-actions">
+                    <button class="btn btn-danger" onclick="event.stopPropagation(); deleteGroup('${g.id}')" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Delete</button>
+                </div>
+            </div>
+            <div class="group-members-panel" id="group-panel-${g.id}">
+                <div class="spinner" style="width:20px; height:20px;"></div> Loading members...
+            </div>
+        </div>
+    `).join('');
+}
+
+window.deleteGroup = async function(id) {
+    if (!confirm('Delete this group?')) return;
+    try {
+        await apiFetch(`/groups/${id}`, { method: 'DELETE' });
+        showToast('Group deleted');
+        fetchGroups();
+    } catch (e) { console.error(e); }
+}
+
+window.toggleGroupMembers = async function(groupId) {
+    const panel = document.getElementById(`group-panel-${groupId}`);
+    if (panel.classList.contains('open')) {
+        panel.classList.remove('open');
+        return;
+    }
+    
+    // Close others
+    document.querySelectorAll('.group-members-panel').forEach(p => p.classList.remove('open'));
+    panel.classList.add('open');
+
+    try {
+        const members = await apiFetch(`/groups/${groupId}/members`);
+        panel.innerHTML = `
+            <div class="member-list">
+                ${members.length === 0 ? '<div style="color:var(--text-muted); font-size:0.85rem;">No members yet</div>' : ''}
+                ${members.map(m => `
+                    <div class="member-row">
+                        <div class="member-info">
+                            <span>👤 ${escapeHtml(m.username)}</span>
+                            <span class="member-role">${m.role}</span>
+                        </div>
+                        <button class="btn btn-outline" style="border-color:var(--danger); color:var(--danger); padding:0.2rem 0.5rem; font-size:0.7rem;" 
+                                onclick="removeMember('${groupId}', '${m.id}')">Remove</button>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="add-member-row">
+                <div class="search-wrap" style="flex:1;">
+                    <input type="text" class="input-control" id="search-add-${groupId}" placeholder="Add user by username..." 
+                           oninput="debounceAddMemberSearch(this.value, '${groupId}')" style="width:100%; padding: 0.4rem 0.8rem;">
+                    <div id="results-add-${groupId}" class="search-results-dropdown" style="display:none; bottom:100%; top:auto; margin-bottom:4px;"></div>
+                </div>
+            </div>
+        `;
+    } catch (e) {
+        panel.innerHTML = '<div style="color:var(--danger)">Failed to load members</div>';
+    }
+}
+
+let addMemberTimeout = null;
+window.debounceAddMemberSearch = function(query, groupId) {
+    clearTimeout(addMemberTimeout);
+    addMemberTimeout = setTimeout(() => searchAddMemberApi(query, groupId), 300);
+}
+
+async function searchAddMemberApi(query, groupId) {
+    const dropdown = document.getElementById(`results-add-${groupId}`);
+    if (!query || query.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+    }
+    try {
+        const users = await apiFetch(`/auth/users?q=${encodeURIComponent(query)}`);
+        if (users.length === 0) {
+            dropdown.innerHTML = '<div class="dropdown-item" style="color:var(--text-muted)">No users found</div>';
+        } else {
+            dropdown.innerHTML = users.map(u => `
+                <div class="dropdown-item" onclick="addMemberToGroup('${groupId}', '${u.id}')">
+                    ${escapeHtml(u.username)} <span style="font-size:0.7rem; color:var(--text-muted)">(${u.role})</span>
+                </div>
+            `).join('');
+        }
+        dropdown.style.display = 'block';
+    } catch(e) {}
+}
+
+window.addMemberToGroup = async function(groupId, userId) {
+    try {
+        await apiFetch(`/groups/${groupId}/members`, {
+            method: 'POST',
+            body: JSON.stringify({ user_ids: [userId] })
+        });
+        showToast('Member added');
+        toggleGroupMembers(groupId); // Refresh open panel
+        toggleGroupMembers(groupId);
+        fetchGroups(true); // update member counts
+    } catch (e) { console.error(e); }
+}
+
+window.removeMember = async function(groupId, userId) {
+    try {
+        await apiFetch(`/groups/${groupId}/members/${userId}`, { method: 'DELETE' });
+        showToast('Member removed');
+        toggleGroupMembers(groupId); // Refresh open panel
+        toggleGroupMembers(groupId);
+        fetchGroups(true);
+    } catch (e) { console.error(e); }
+}
+
+// Create Group logic
+document.getElementById('create-group-btn')?.addEventListener('click', () => {
+    const modal = document.getElementById('group-modal');
+    modal.innerHTML = `
+        <div class="doc-modal-panel upload-modal-panel" style="max-width: 400px;">
+            <div class="dashboard-header" style="padding: 1.5rem; border-bottom: 1px solid var(--glass-border); margin-bottom: 0;">
+                <h3 style="margin:0;">Create Group</h3>
+                <button class="btn btn-outline" onclick="document.getElementById('group-modal').style.display='none'" style="padding: 0.4rem 0.8rem;">✕</button>
+            </div>
+            <div class="upload-modal-body">
+                <div class="form-group">
+                    <label>Group Name</label>
+                    <input type="text" id="new-group-name" class="input-control" placeholder="E.g. Managers" style="min-height: auto;">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="new-group-desc" placeholder="Brief description..."></textarea>
+                </div>
+            </div>
+            <div class="upload-modal-footer">
+                <button class="btn btn-outline" onclick="document.getElementById('group-modal').style.display='none'">Cancel</button>
+                <button class="btn btn-primary" onclick="submitCreateGroup()">Create</button>
+            </div>
+        </div>
+    `;
+    modal.style.display = 'flex';
+});
+
+window.submitCreateGroup = async function() {
+    const name = document.getElementById('new-group-name').value.trim();
+    const desc = document.getElementById('new-group-desc').value.trim();
+    if (!name) return showToast('Name is required', 'error');
+
+    try {
+        await apiFetch('/groups', {
+            method: 'POST',
+            body: JSON.stringify({ name, description: desc })
+        });
+        showToast('Group created');
+        document.getElementById('group-modal').style.display = 'none';
+        fetchGroups();
+    } catch (e) { console.error(e); }
+}
+
 
 // Init
 checkAuth();

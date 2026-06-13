@@ -20,7 +20,9 @@ from app.schemas import (
     TokenResponse,
     RefreshTokenRequest,
     UserResponse,
+    UserSearchResult,
 )
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -281,3 +283,38 @@ async def refresh_tokens(
 async def get_me(current_user: User = Depends(get_current_user)):
     """Возвращает данные текущего авторизованного пользователя."""
     return current_user
+
+
+@router.get("/users", response_model=list[UserSearchResult])
+async def search_users(
+    q: str | None = None,
+    group_id: str | None = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Поиск пользователей. Только для admin.
+    q        — фильтр по username (ILIKE)
+    group_id — вернуть только членов определённой группы
+    """
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    from app.models import user_groups
+
+    stmt = select(User)
+    if group_id:
+        try:
+            gid = uuid.UUID(group_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid group_id format")
+        stmt = (
+            stmt
+            .join(user_groups, User.id == user_groups.c.user_id)
+            .where(user_groups.c.group_id == gid)
+        )
+    if q:
+        stmt = stmt.where(User.username.ilike(f"%{q}%"))
+
+    result = await db.execute(stmt.order_by(User.username).limit(50))
+    return result.scalars().all()

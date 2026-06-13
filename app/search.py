@@ -5,12 +5,13 @@ import logging
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import or_, cast, String
+from sqlalchemy import or_, and_, cast, String
 
-from app.models import User, Document, Chunk
+from app.models import User, Document, Chunk, user_groups
 from app.qdrant_client import semantic_search
 from app.embeddings import get_embedding
 from app.schemas import SearchResultItem
+from sqlalchemy.future import select
 
 logger = logging.getLogger(__name__)
 
@@ -34,15 +35,33 @@ async def hybrid_search(
     """
 
     # ── 1. Список доступных документов ───────────────────────────────────
-    doc_query = select(Document)
-    if current_user.role != "admin":
-        doc_query = doc_query.where(
+    if current_user.role == "admin":
+        doc_result = await db.execute(select(Document))
+    else:
+        # Получаем группы пользователя
+        gid_result = await db.execute(
+            select(user_groups.c.group_id).where(user_groups.c.user_id == current_user.id)
+        )
+        user_group_ids = [str(row[0]) for row in gid_result.fetchall()]
+
+        group_conditions = [
+            Document.available_to_groups.has_key(gid)
+            for gid in user_group_ids
+        ]
+
+        doc_query = select(Document).where(
             or_(
                 Document.uploader_id == current_user.id,
-                Document.is_available_to.has_key(str(current_user.id))
+                and_(
+                    or_(Document.is_available_to.is_(None), cast(Document.is_available_to, String).in_(('null', '[]'))),
+                    or_(Document.available_to_groups.is_(None), cast(Document.available_to_groups, String).in_(('null', '[]')))
+                ),
+                Document.is_available_to.has_key(str(current_user.id)),
+                *group_conditions,
             )
         )
-    doc_result = await db.execute(doc_query)
+        doc_result = await db.execute(doc_query)
+
     accessible_docs = doc_result.scalars().all()
     accessible_doc_ids = _get_accessible_doc_ids(accessible_docs)
     doc_lookup = {str(doc.id): doc for doc in accessible_docs}

@@ -64,7 +64,8 @@ class DocumentResponse(BaseModel):
     extension: str | None = None
     size_bytes: int | None = None
     description: str | None = None
-    is_available_to: list[UUID] | None = None
+    is_available_to: list[str] | None = None
+    available_to_groups: list[str] | None = None
 
     class Config:
         from_attributes = True
@@ -75,6 +76,7 @@ class DocumentUpdateRequest(BaseModel):
     author: str | None = None
     description: str | None = None
     is_available_to: list[UUID] | None = None
+    available_to_groups: list[UUID] | None = None
 
 
 class ChunkResponse(BaseModel):
@@ -114,3 +116,36 @@ class SearchResultItem(BaseModel):
 
 class ChatRequest(BaseModel):
     query: str
+
+
+# ──────────────────────────────────────────
+# Группы и управление доступом
+# ──────────────────────────────────────────
+
+class GroupCreate(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class GroupMemberAdd(BaseModel):
+    user_ids: list[UUID]
+
+
+class GroupResponse(BaseModel):
+    id: UUID
+    name: str
+    description: str | None = None
+    created_at: datetime
+    member_count: int | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class UserSearchResult(BaseModel):
+    id: UUID
+    username: str
+    role: str
+
+    class Config:
+        from_attributes = True
