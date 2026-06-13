@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
-from app.database import engine, Base
+from app.database import engine
 from app.embeddings import load_model, get_embedding_dimension
 
 logging.basicConfig(level=logging.INFO)
@@ -23,12 +23,8 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Создаём таблицы, если их нет (без DROP — данные сохраняются)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables ensured")
-
-    # 2. Проверяем подключение к БД
+    # 1. Проверяем подключение к БД
+    # Таблицами управляет Alembic — запустите `alembic upgrade head` перед стартом
     try:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
@@ -36,7 +32,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
 
-    # 3. Загружаем модель эмбеддингов
+    # 2. Загружаем модель эмбеддингов
     load_model()
     logger.info(f"Embedding model loaded, dimension: {get_embedding_dimension()}")
 
