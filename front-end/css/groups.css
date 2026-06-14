@@ -1,0 +1,85 @@
+.groups-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.group-card {
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    transition: transform 0.2s;
+}
+
+.group-card:hover { transform: translateY(-1px); }
+
+.group-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+}
+
+.group-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.group-card-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+}
+
+.group-card-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+/* Members panel (expandable) */
+.group-members-panel {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--glass-border);
+    display: none;
+}
+
+.group-members-panel.open {
+    display: block;
+}
+
+.member-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+}
+
+.member-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    font-size: 0.85rem;
+}
+
+.member-row .member-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.member-role {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.add-member-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}

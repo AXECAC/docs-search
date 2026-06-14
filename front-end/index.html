@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enterprise Docs Search</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1781384500">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/documents.css">
+    <link rel="stylesheet" href="css/search.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="css/modals.css">
+    <link rel="stylesheet" href="css/groups.css">
 </head>
 <body>
 
@@ -145,8 +154,16 @@
     </div>
 
     <div id="upload-modal" class="doc-modal" style="display:none;"></div>
-    <div id="group-modal" class="doc-modal" style="display:none;"></div>
+    <div id="group-modal" class="doc-modal" style="display:none;" role="dialog" aria-modal="true"></div>
 
-    <script src="app.js?v=1781385600"></script>
+    <script src="js/state.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/documents.js"></script>
+    <script src="js/doc-access.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/groups.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
