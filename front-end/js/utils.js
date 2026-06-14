@@ -26,9 +26,9 @@ function escapeHtml(str) {
 }
 
 function formatBytes(bytes, decimals = 2) {
-    if (!+bytes) return '0 Bytes';
+    if (!+bytes) return '0 Байт';
     const k = 1024, dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const sizes = ['Байт', 'КБ', 'МБ', 'ГБ', 'ТБ'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
@@ -58,13 +58,13 @@ async function apiFetch(endpoint, options = {}) {
                 response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
             } else {
                 if (typeof logout === 'function') logout();
-                throw new Error('Session expired. Please login again.');
+                throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
             }
         }
 
         if (!response.ok) {
             const err = await response.json().catch(() => ({ detail: response.statusText }));
-            throw new Error(err.detail || 'API Error');
+            throw new Error(err.detail || 'Ошибка API');
         }
 
         return await response.json();

@@ -33,7 +33,7 @@ function render() {
                 ${state.user.role.toUpperCase()}
             </span>
             <span>${state.user.username}</span>
-            <button class="btn btn-outline" onclick="logout()">Logout</button>
+            <button class="btn btn-outline" onclick="logout()">Выйти</button>
         `;
 
         // Toggle admin tabs
@@ -68,11 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auth form toggle
     document.getElementById('auth-toggle')?.addEventListener('click', () => {
         state.isLoginMode = !state.isLoginMode;
-        document.getElementById('auth-title').innerText = state.isLoginMode ? 'Login' : 'Register';
-        document.getElementById('auth-submit').innerText = state.isLoginMode ? 'Login' : 'Create Account';
+        document.getElementById('auth-title').innerText = state.isLoginMode ? 'Вход' : 'Регистрация';
+        document.getElementById('auth-submit').innerText = state.isLoginMode ? 'Войти' : 'Создать аккаунт';
         document.getElementById('auth-toggle').innerText = state.isLoginMode
-            ? "Don't have an account? Register"
-            : 'Already have an account? Login';
+            ? "Нет аккаунта? Зарегистрируйтесь"
+            : 'Уже есть аккаунт? Войти';
     });
 
     // Auth form submit
@@ -115,15 +115,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 localStorage.setItem('access_token', data.access_token);
                 localStorage.setItem('refresh_token', data.refresh_token);
-                showToast('Registered successfully!');
+                showToast('Успешная регистрация!');
             }
 
             await checkAuth();
-            showToast(`Welcome, ${state.user.username}!`);
+            showToast(`Добро пожаловать, ${state.user.username}!`);
         } catch (e) {
             showToast(e.message, 'error');
         } finally {
-            btn.innerHTML = state.isLoginMode ? 'Login' : 'Create Account';
+            btn.innerHTML = state.isLoginMode ? 'Войти' : 'Создать аккаунт';
             btn.disabled = false;
         }
     });

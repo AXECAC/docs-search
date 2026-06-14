@@ -24,7 +24,7 @@ function renderSearchResults(results, query) {
 
     if (!results || results.length === 0) {
         stateEl.style.display = 'block';
-        stateEl.innerText = 'No results found. Try different keywords.';
+        stateEl.innerText = 'Ничего не найдено. Попробуйте другие ключевые слова.';
         container.innerHTML = '';
         return;
     }
@@ -54,7 +54,7 @@ function renderSearchResults(results, query) {
                     </span>
                 </div>
                 <div class="score-badge">
-                    ⚡ ${scorePercent}% match
+                    Совпадение: ${scorePercent}%
                 </div>
             </div>
             <div class="result-text">${highlightText(snippet, query)}</div>
@@ -71,7 +71,7 @@ async function performSearch(query) {
     const container = document.getElementById('search-results');
 
     stateEl.style.display = 'block';
-    stateEl.innerHTML = '<div style="display:inline-block" class="spinner"></div>&nbsp; Searching...';
+    stateEl.innerHTML = '<div style="display:inline-block" class="spinner"></div>&nbsp; Поиск...';
     container.innerHTML = '';
 
     try {

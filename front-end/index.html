@@ -15,52 +15,60 @@
     <link rel="stylesheet" href="css/chat.css">
     <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/groups.css">
+    <script src="js/theme.js"></script>
 </head>
 <body>
 
     <header>
         <div class="logo">DocsSearch</div>
         <nav class="tab-nav" id="tab-nav" style="display: none;">
-            <button class="tab-btn active" data-tab="dashboard">Documents</button>
-            <button class="tab-btn" data-tab="search">Search</button>
-            <button class="tab-btn" data-tab="chat">AI Chat</button>
-            <button class="tab-btn admin-only" data-tab="groups" style="display:none;">Groups</button>
+            <button class="tab-btn active" data-tab="dashboard">Документы</button>
+            <button class="tab-btn" data-tab="search">Поиск</button>
+            <button class="tab-btn" data-tab="chat">ИИ-Чат</button>
+            <button class="tab-btn admin-only" data-tab="groups" style="display:none;">Группы</button>
         </nav>
-        <div class="nav-actions" id="nav-actions">
-            <!-- Dynamically populated -->
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <div class="nav-actions" id="nav-actions">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="global-actions">
+                <button class="btn btn-outline" id="theme-toggle-btn" onclick="toggleTheme()" style="padding: 0.4rem 0.6rem; font-size: 0.9rem; border: none; background: transparent; cursor: pointer;" title="Toggle Theme">
+                    Тема
+                </button>
+            </div>
         </div>
     </header>
 
     <div class="container">
         <!-- Auth View -->
         <div id="auth-view" class="view active glass auth-container">
-            <h2 id="auth-title">Login</h2>
+            <h2 id="auth-title">Вход</h2>
             <form id="auth-form">
                 <div class="input-group">
-                    <label>Username</label>
+                    <label>Имя пользователя</label>
                     <input type="text" id="username" class="input-control" required autocomplete="username">
                 </div>
                 <div class="input-group">
-                    <label>Password</label>
+                    <label>Пароль</label>
                     <input type="password" id="password" class="input-control" required autocomplete="current-password">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="auth-submit">Login</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="auth-submit">Войти</button>
             </form>
-            <div class="auth-toggle" id="auth-toggle">Don't have an account? Register</div>
+            <div class="auth-toggle" id="auth-toggle">Нет аккаунта? Зарегистрируйтесь</div>
         </div>
 
         <!-- Dashboard View -->
         <div id="dashboard-view" class="view">
             <div class="dashboard-header">
-                <h2>Your Documents</h2>
+                <h2>Ваши документы</h2>
                 <button class="btn btn-primary" id="open-upload-modal-btn">
-                    + Upload File
+                    + Загрузить файл
                 </button>
             </div>
 
             <div class="docs-search-bar">
                 <input type="text" id="docs-filter-input" class="input-control"
-                    placeholder="Search by title..." oninput="onDocsFilter(this.value)"
+                    placeholder="Поиск по названию..." oninput="onDocsFilter(this.value)"
                     style="max-width: 400px;">
             </div>
 
@@ -74,7 +82,7 @@
         <!-- Search View -->
         <div id="search-view" class="view">
             <div class="dashboard-header">
-                <h2>Search Documents</h2>
+                <h2>Поиск по документам</h2>
             </div>
 
             <form id="search-form" class="search-bar glass">
@@ -82,10 +90,10 @@
                     type="text"
                     id="search-input"
                     class="search-input"
-                    placeholder="Search your documents..."
+                    placeholder="Поиск по тексту документов..."
                     autocomplete="off"
                 >
-                <button type="submit" class="btn btn-primary search-btn">Search</button>
+                <button type="submit" class="btn btn-primary search-btn">Найти</button>
             </form>
 
             <div id="search-state" class="search-state" style="display:none;"></div>
@@ -95,8 +103,8 @@
         <!-- Groups View (admin only) -->
         <div id="groups-view" class="view">
             <div class="dashboard-header">
-                <h2>Group Management</h2>
-                <button class="btn btn-primary" id="create-group-btn">+ New Group</button>
+                <h2>Управление группами</h2>
+                <button class="btn btn-primary" id="create-group-btn">+ Новая группа</button>
             </div>
             <div id="groups-list" class="groups-list">
                 <!-- Groups rendered here -->
@@ -106,7 +114,7 @@
         <!-- Chat View -->
         <div id="chat-view" class="view chat-view">
             <div class="dashboard-header" style="margin-bottom: 1rem;">
-                <h2>AI Chat Assistant</h2>
+                <h2>ИИ-Ассистент</h2>
             </div>
             
             <div class="chat-container glass">
@@ -121,11 +129,11 @@
                         type="text" 
                         id="chat-input" 
                         class="search-input" 
-                        placeholder="Ask a question..." 
+                        placeholder="Задайте вопрос..." 
                         autocomplete="off"
                         required
                     >
-                    <button type="submit" class="btn btn-primary search-btn" id="chat-submit-btn">Send</button>
+                    <button type="submit" class="btn btn-primary search-btn" id="chat-submit-btn">Отправить</button>
                 </form>
             </div>
         </div>
@@ -140,11 +148,11 @@
             <div class="doc-modal-header">
                 <div class="doc-modal-title-wrap">
                     <span class="doc-modal-icon" id="modal-icon">📄</span>
-                    <span class="doc-modal-title" id="modal-title">Document</span>
+                    <span class="doc-modal-title" id="modal-title">Документ</span>
                 </div>
                 <div class="doc-modal-actions">
-                    <a id="modal-download-btn" class="btn btn-outline" href="#" download>Download</a>
-                    <button class="btn btn-outline" onclick="closeDocModal()">Close</button>
+                    <a id="modal-download-btn" class="btn btn-outline" href="#" download>Скачать</a>
+                    <button class="btn btn-outline" onclick="closeDocModal()">Закрыть</button>
                 </div>
             </div>
             <div class="doc-modal-body" id="modal-body">

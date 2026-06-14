@@ -66,7 +66,7 @@
 
 .result-source .doc-name {
     font-weight: 600;
-    color: #818cf8;
+    color: var(--accent-text);
 }
 
 .score-badge {
@@ -77,9 +77,9 @@
     border-radius: 999px;
     font-size: 0.7rem;
     font-weight: 600;
-    background: rgba(99, 102, 241, 0.15);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    color: #818cf8;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    color: var(--accent-text);
     white-space: nowrap;
 }
 
@@ -91,7 +91,7 @@
 }
 
 .result-text mark {
-    background: rgba(99, 102, 241, 0.3);
+    background: var(--accent-bg);
     color: var(--text-main);
     border-radius: 3px;
     padding: 0 2px;

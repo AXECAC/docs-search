@@ -23,7 +23,7 @@ window.openDocAccessModal = async function(docId, currentGroupsRaw) {
     modal.innerHTML = `
         <div class="doc-modal-panel upload-modal-panel" style="max-width: 460px;">
             <div class="dashboard-header" style="padding: 1.5rem; border-bottom: 1px solid var(--glass-border); margin-bottom: 0;">
-                <h3 style="margin:0;">Document Access</h3>
+                <h3 style="margin:0;">Доступ к документу</h3>
                 <button class="btn btn-outline" onclick="closeDocAccessModal()" style="padding: 0.4rem 0.8rem;">✕</button>
             </div>
             <div class="upload-modal-body">
@@ -57,8 +57,8 @@ window.openDocAccessModal = async function(docId, currentGroupsRaw) {
                 </div>
             </div>
             <div class="upload-modal-footer">
-                <button class="btn btn-outline" onclick="closeDocAccessModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="submitDocAccess()">Save</button>
+                <button class="btn btn-outline" onclick="closeDocAccessModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="submitDocAccess()">Сохранить</button>
             </div>
         </div>
     `;

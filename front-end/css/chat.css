@@ -43,7 +43,7 @@
 }
 
 .chat-message.assistant .message-content {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--hover-bg);
     color: var(--text-main);
     border-bottom-left-radius: 4px;
     border: 1px solid var(--glass-border);
@@ -54,7 +54,7 @@
     gap: 0.75rem;
     padding: 1rem;
     border-top: 1px solid var(--glass-border);
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--input-bg);
     border-bottom-left-radius: 16px;
     border-bottom-right-radius: 16px;
 }
@@ -63,13 +63,13 @@
 .sources-box {
     margin-bottom: 0.75rem;
     padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--input-bg);
     border-radius: 8px;
     border: 1px dashed var(--glass-border);
     font-size: 0.8rem;
 }
 
 .sources-box .source-title {
-    color: #818cf8;
+    color: var(--accent-text);
     margin-right: 0.5rem;
 }

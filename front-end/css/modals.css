@@ -13,7 +13,7 @@
 .doc-modal-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--backdrop-bg);
     backdrop-filter: blur(4px);
     cursor: pointer;
 }
@@ -83,7 +83,7 @@
     flex: 1;
     width: 100%;
     border: none;
-    background: #fff;
+    background: var(--panel-bg);
 }
 
 /* ── Download prompt (non-previewable) ──────────── */
@@ -119,8 +119,8 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 0.4rem 1.2rem;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--hover-bg);
+    border: 1px solid var(--glass-border);
     border-radius: 0.5rem;
     padding: 0.75rem 1rem;
     font-size: 0.8rem;
@@ -136,8 +136,8 @@
 
 /* ── Upload / Access modal panel ────────────────── */
 .upload-modal-panel {
-    background: #1e1e2e;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--panel-bg);
+    border: 1px solid var(--glass-border);
     position: relative;
     z-index: 1;
     width: 100%;
@@ -184,7 +184,7 @@
 
 .form-group .input-control,
 .form-group textarea {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--input-bg);
     border: 1px solid var(--glass-border);
     border-radius: 8px;
     padding: 0.6rem 0.9rem;
@@ -207,8 +207,8 @@
 
 .file-drop-zone:hover,
 .file-drop-zone.dragover {
-    border-color: #818cf8;
-    background: rgba(129, 140, 248, 0.07);
+    border-color: var(--accent-text);
+    background: var(--hover-bg);
 }
 
 .file-drop-zone .file-drop-icon {
@@ -218,7 +218,7 @@
 }
 
 .file-drop-zone .file-selected-name {
-    color: #a5b4fc;
+    color: var(--accent-text);
     font-weight: 600;
     font-size: 0.9rem;
     margin-top: 0.3rem;
@@ -230,7 +230,7 @@
     display: flex;
     gap: 0.5rem;
     padding: 0.3rem;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--input-bg);
     border-radius: 10px;
     margin-bottom: 0.5rem;
 }
@@ -249,9 +249,9 @@
 }
 
 .access-toggle-btn.active {
-    background: rgba(129, 140, 248, 0.25);
-    color: #a5b4fc;
-    border: 1px solid rgba(129, 140, 248, 0.4);
+    background: var(--accent-bg);
+    color: var(--accent-text);
+    border: 1px solid var(--accent-border);
 }
 
 .access-panel {
@@ -266,7 +266,7 @@
 
 /* ── Tag multi-select (group checkboxes) ────────── */
 .tag-select-wrap {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--hover-bg);
     border: 1px solid var(--glass-border);
     border-radius: 8px;
     padding: 0.5rem;
@@ -285,11 +285,11 @@
     transition: background 0.15s;
 }
 
-.tag-item:hover { background: rgba(255, 255, 255, 0.06); }
+.tag-item:hover { background: var(--hover-bg); }
 
 .tag-item input[type="checkbox"] {
     margin-right: 0.5rem;
-    accent-color: #818cf8;
+    accent-color: var(--primary);
 }
 
 .tag-item .member-count {

@@ -59,7 +59,7 @@
     padding: 0 0.6rem;
     border-radius: 8px;
     border: 1px solid var(--glass-border);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--input-bg);
     color: var(--text-main);
     font-size: 0.875rem;
     font-weight: 500;

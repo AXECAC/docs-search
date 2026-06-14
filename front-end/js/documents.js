@@ -20,10 +20,10 @@ async function fetchDocuments() {
 }
 
 async function deleteDocument(id) {
-    if (!confirm('Are you sure you want to delete this document?')) return;
+    if (!confirm('Вы уверены, что хотите удалить этот документ?')) return;
     try {
         await apiFetch(`/documents/${id}`, { method: 'DELETE' });
-        showToast('Document deleted');
+        showToast('Документ удален');
         fetchDocuments();
     } catch (e) { console.error(e); }
 }
@@ -50,7 +50,7 @@ function renderDocuments() {
     const paginationEl = document.getElementById('docs-pagination');
 
     if (!state.documents || state.documents.length === 0) {
-        grid.innerHTML = `<p style="color: var(--text-muted);">${docsFilterQuery ? 'No documents match your search.' : 'No documents found.'}</p>`;
+        grid.innerHTML = `<p style="color: var(--text-muted);">${docsFilterQuery ? 'По вашему запросу документы не найдены.' : 'Документы не найдены.'}</p>`;
         if (paginationEl) paginationEl.innerHTML = '';
         return;
     }
@@ -59,7 +59,7 @@ function renderDocuments() {
         const extRaw = (doc.extension || '').replace('.', '').toLowerCase();
         const extLabel = extRaw ? extRaw.toUpperCase() : 'UNKNOWN';
         const docIcon = EXT_ICONS[extRaw] || '';
-        const uploaderLabel = doc.uploader_username ? `Uploader: ${escapeHtml(doc.uploader_username)}` : '';
+        const uploaderLabel = doc.uploader_username ? `Загрузил: ${escapeHtml(doc.uploader_username)}` : '';
         return `
         <div class="doc-card glass">
             <div class="doc-header">
@@ -67,8 +67,8 @@ function renderDocuments() {
                 <span class="badge">${extLabel}</span>
             </div>
             <div class="doc-meta">
-                <span>Size: ${formatBytes(doc.size_bytes)}</span>
-                <span>Date: ${new Date(doc.upload_date).toLocaleDateString()}</span>
+                <span>Размер: ${formatBytes(doc.size_bytes)}</span>
+                <span>Дата: ${new Date(doc.upload_date).toLocaleDateString()}</span>
                 ${uploaderLabel ? `<span>${uploaderLabel}</span>` : ''}
             </div>
             <div style="margin-top: auto; display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
@@ -77,14 +77,14 @@ function renderDocuments() {
                     data-doc-title="${escapeHtml(doc.title || 'Untitled')}"
                     data-doc-ext="${extRaw}"
                     onclick="openDocModal(this.dataset.docId, this.dataset.docTitle, this.dataset.docExt)">
-                    Open
+                    Открыть
                 </button>
                 ${(state.user.role === 'admin' || state.user.id === doc.uploader_id) ? `
                     <button class="btn btn-outline" style="color: var(--primary);"
                         onclick="openDocAccessModal('${doc.id}', ${JSON.stringify(doc.available_to_groups || []).replace(/"/g, '&quot;')})">
-                        Access
+                        Доступ
                     </button>
-                    <button class="btn btn-danger" onclick="deleteDocument('${doc.id}')">Delete</button>
+                    <button class="btn btn-danger" onclick="deleteDocument('${doc.id}')">Удалить</button>
                 ` : ''}
             </div>
         </div>`;
@@ -248,7 +248,7 @@ async function openUploadModal(file = null) {
     modal.innerHTML = `
         <div class="doc-modal-panel upload-modal-panel">
             <div class="dashboard-header" style="padding: 1.5rem; border-bottom: 1px solid var(--glass-border); margin-bottom: 0;">
-                <h3 style="margin:0;">Upload Document</h3>
+                <h3 style="margin:0;">Загрузка документа</h3>
                 <button class="btn btn-outline" onclick="closeUploadModal()" style="padding: 0.4rem 0.8rem;">✕</button>
             </div>
             <div class="upload-modal-body">
@@ -256,33 +256,33 @@ async function openUploadModal(file = null) {
                 <!-- File Drop Zone -->
                 <div class="file-drop-zone" id="modal-drop-zone" onclick="document.getElementById('modalFileInput').click()">
                     <span class="file-drop-icon">DOC</span>
-                    <h4 id="modal-drop-text">${file ? 'File selected' : 'Click or Drag & Drop file here'}</h4>
+                    <h4 id="modal-drop-text">${file ? 'Файл выбран' : 'Нажмите или перетащите файл сюда'}</h4>
                     <div id="modal-file-name" class="file-selected-name">${file ? file.name : ''}</div>
                     <input type="file" id="modalFileInput" style="display: none;">
                 </div>
 
                 <!-- Title/Desc -->
                 <div class="form-group">
-                    <label>Title (optional)</label>
-                    <input type="text" id="upload-title" class="input-control" placeholder="Document title...">
+                    <label>Название (опционально)</label>
+                    <input type="text" id="upload-title" class="input-control" placeholder="Название документа...">
                 </div>
                 <div class="form-group">
-                    <label>Description (optional)</label>
-                    <textarea id="upload-desc" placeholder="Brief description..."></textarea>
+                    <label>Описание (опционально)</label>
+                    <textarea id="upload-desc" placeholder="Краткое описание..."></textarea>
                 </div>
 
                 <!-- Access Control -->
                 <div class="form-group">
-                    <label>Access Control</label>
+                    <label>Настройки доступа</label>
                     <div class="access-toggle">
-                        <button class="access-toggle-btn active" id="btn-access-all" onclick="toggleAccessType('all')">Public (All)</button>
-                        <button class="access-toggle-btn" id="btn-access-restricted" onclick="toggleAccessType('restricted')">Restricted</button>
+                        <button class="access-toggle-btn active" id="btn-access-all" onclick="toggleAccessType('all')">Публичный</button>
+                        <button class="access-toggle-btn" id="btn-access-restricted" onclick="toggleAccessType('restricted')">Ограниченный</button>
                     </div>
 
                     <div id="restricted-panel" class="access-panel">
-                        <div style="font-size:0.8rem; color:var(--text-muted);">Select groups or specific users who can access this document.</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">Выберите группы или пользователей, которым будет доступен этот документ.</div>
                         
-                        <label style="font-size:0.75rem;">Groups</label>
+                        <label style="font-size:0.75rem;">Группы</label>
                         <div class="tag-select-wrap" id="upload-group-list">
                             ${state.groups.map(g => `
                                 <label class="tag-item">
@@ -292,13 +292,13 @@ async function openUploadModal(file = null) {
                                     </span>
                                 </label>
                             `).join('')}
-                            ${state.groups.length === 0 ? '<div style="padding:0.5rem; font-size:0.8rem; color:var(--text-muted);">No groups available</div>' : ''}
+                            ${state.groups.length === 0 ? '<div style="padding:0.5rem; font-size:0.8rem; color:var(--text-muted);">Нет доступных групп</div>' : ''}
                         </div>
 
                         ${state.user && state.user.role === 'admin' ? `
-                        <label style="font-size:0.75rem; margin-top: 0.5rem;">Specific Users (by username)</label>
+                        <label style="font-size:0.75rem; margin-top: 0.5rem;">Конкретные пользователи (по логину)</label>
                         <div class="search-wrap">
-                            <input type="text" class="input-control" id="upload-user-search" placeholder="Type username..." oninput="debounceUserSearch(this.value, 'upload')" style="width:100%">
+                            <input type="text" class="input-control" id="upload-user-search" placeholder="Введите логин..." oninput="debounceUserSearch(this.value, 'upload')" style="width:100%">
                             <div id="upload-user-results" class="search-results-dropdown" style="display:none;"></div>
                         </div>
                         <div class="user-chips" id="upload-selected-users"></div>
@@ -308,8 +308,8 @@ async function openUploadModal(file = null) {
 
             </div>
             <div class="upload-modal-footer">
-                <button class="btn btn-outline" onclick="closeUploadModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="submitUpload()">Upload File</button>
+                <button class="btn btn-outline" onclick="closeUploadModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="submitUpload()">Загрузить</button>
             </div>
         </div>
     `;
@@ -328,14 +328,14 @@ async function openUploadModal(file = null) {
         dropZone.classList.remove('dragover');
         if (e.dataTransfer.files.length) {
             pendingUploadFile = e.dataTransfer.files[0];
-            document.getElementById('modal-drop-text').textContent = 'File selected';
+            document.getElementById('modal-drop-text').textContent = 'Файл выбран';
             document.getElementById('modal-file-name').textContent = pendingUploadFile.name;
         }
     });
     fileIn.addEventListener('change', (e) => {
         if (e.target.files.length) {
             pendingUploadFile = e.target.files[0];
-            document.getElementById('modal-drop-text').textContent = 'File selected';
+            document.getElementById('modal-drop-text').textContent = 'Файл выбран';
             document.getElementById('modal-file-name').textContent = pendingUploadFile.name;
         }
     });
@@ -401,7 +401,7 @@ async function searchUsersApi(query, context) {
     try {
         const users = await apiFetch(`/auth/users?q=${encodeURIComponent(query)}`);
         if (users.length === 0) {
-            dropdown.innerHTML = '<div class="dropdown-item" style="color:var(--text-muted)">No users found</div>';
+            dropdown.innerHTML = '<div class="dropdown-item" style="color:var(--text-muted)">Пользователи не найдены</div>';
         } else {
             dropdown.innerHTML = users.map(u => `
                 <div class="dropdown-item" onclick="selectUser('${u.id}', '${escapeHtml(u.username)}', '${context}')">
@@ -448,7 +448,7 @@ function renderUploadSelectedUsers() {
 
 async function submitUpload() {
     if (!pendingUploadFile) {
-        showToast('Please select a file first', 'error');
+        showToast('Пожалуйста, сначала выберите файл', 'error');
         return;
     }
 
@@ -470,7 +470,7 @@ async function submitUpload() {
         }
     }
 
-    showToast('Uploading...', 'success');
+    showToast('Загрузка...', 'success');
     closeUploadModal();
 
     try {
@@ -478,7 +478,7 @@ async function submitUpload() {
             method: 'POST',
             body: formData,
         });
-        showToast('File uploaded successfully!');
+        showToast('Файл успешно загружен!');
         if (state.activeTab === 'dashboard') fetchDocuments();
     } catch (e) {
         console.error(e);

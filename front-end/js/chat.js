@@ -92,7 +92,7 @@ async function performChat(query) {
                                 </span>`;
                             }).join(' ');
                             sourcesHtml = `<div class="sources-box">
-                                <strong>📚 Источники:</strong><br>
+                                <strong>Источники:</strong><br>
                                 ${sourceLinks}
                             </div>`;
                             assistantMsgContent.innerHTML = sourcesHtml + fullText;
@@ -112,7 +112,7 @@ async function performChat(query) {
         }
 
     } catch (e) {
-        assistantMsgContent.innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
+        assistantMsgContent.innerHTML = `<span style="color:var(--danger)">Ошибка: ${e.message}</span>`;
     } finally {
         submitBtn.disabled = false;
         inputField.disabled = false;

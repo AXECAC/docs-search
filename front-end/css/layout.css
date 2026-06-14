@@ -5,7 +5,7 @@ header {
     align-items: center;
     padding: 1rem 2rem;
     border-bottom: 1px solid var(--glass-border);
-    background: rgba(15, 23, 42, 0.5);
+    background: var(--header-bg);
     backdrop-filter: blur(10px);
     position: sticky;
     top: 0;
@@ -16,7 +16,7 @@ header {
     font-size: 1.25rem;
     font-weight: 700;
     letter-spacing: -0.025em;
-    color: #818cf8;
+    color: var(--accent-text);
 }
 
 .nav-actions {
@@ -29,7 +29,7 @@ header {
 .tab-nav {
     display: flex;
     gap: 0.25rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--input-bg);
     border: 1px solid var(--glass-border);
     border-radius: 10px;
     padding: 0.25rem;
@@ -49,7 +49,7 @@ header {
 
 .tab-btn:hover {
     color: var(--text-main);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--hover-bg);
 }
 
 .tab-btn.active {
