@@ -96,7 +96,7 @@ async function refreshToken() {
             localStorage.setItem('refresh_token', data.refresh_token);
             return true;
         }
-    } catch (e) {}
+    } catch (e) { }
     return false;
 }
 
@@ -108,17 +108,17 @@ function logout() {
     state.activeTab = 'dashboard';
     state.documents = [];
     state.groups = [];
-    
+
     // Сброс UI-полей
     const searchInput = document.getElementById('search-input');
     if (searchInput) searchInput.value = '';
-    
+
     const searchResults = document.getElementById('search-results');
     if (searchResults) searchResults.innerHTML = '';
-    
+
     const chatInput = document.getElementById('chat-input');
     if (chatInput) chatInput.value = '';
-    
+
     const chatMessages = document.getElementById('chat-messages');
     if (chatMessages) chatMessages.innerHTML = '';
 
@@ -224,7 +224,7 @@ async function openDocModal(documentId, documentTitle, extension) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (metaRes.ok) docMeta = await metaRes.json();
-    } catch (_) {}
+    } catch (_) { }
 
     const metaHtml = docMeta ? `
         <div class="doc-modal-meta">
@@ -404,44 +404,44 @@ function appendMessage(role, content) {
     const messagesContainer = document.getElementById('chat-messages');
     const msgDiv = document.createElement('div');
     msgDiv.className = `chat-message ${role}`;
-    
+
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
     // Using innerHTML to allow basic formatting and sources
     contentDiv.innerHTML = content.replace(/\n/g, '<br>');
-    
+
     msgDiv.appendChild(contentDiv);
     messagesContainer.appendChild(msgDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
+
     return contentDiv;
 }
 
 async function performChat(query) {
     appendMessage('user', query);
-    
+
     const submitBtn = document.getElementById('chat-submit-btn');
     const inputField = document.getElementById('chat-input');
-    
+
     submitBtn.disabled = true;
     inputField.disabled = true;
-    
+
     // Add a placeholder message for the assistant
     const assistantMsgContent = appendMessage('assistant', '<div class="spinner"></div> Думаю...');
-    
+
     try {
         const token = localStorage.getItem('access_token');
         const headers = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         };
-        
+
         const response = await fetch(`${API_URL}/chat`, {
             method: 'POST',
             headers: headers,
             body: JSON.stringify({ query: query })
         });
-        
+
         if (response.status === 401) {
             const refreshed = await refreshToken();
             if (!refreshed) {
@@ -461,22 +461,22 @@ async function performChat(query) {
         // Streaming logic
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
-        
+
         let fullText = "";
         let sourcesHtml = "";
         assistantMsgContent.innerHTML = ""; // clear spinner
-        
+
         while (true) {
             const { value, done } = await reader.read();
             if (done) break;
-            
+
             const chunkText = decoder.decode(value, { stream: true });
             const lines = chunkText.split('\n').filter(l => l.trim() !== '');
-            
+
             for (const line of lines) {
                 try {
                     const data = JSON.parse(line);
-                    
+
                     if (data.type === 'sources') {
                         if (data.sources && data.sources.length > 0) {
                             const sourceLinks = data.sources.map(s => {
@@ -509,7 +509,7 @@ async function performChat(query) {
                 }
             }
         }
-        
+
     } catch (e) {
         assistantMsgContent.innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
     } finally {
@@ -571,7 +571,7 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
             }).then(async r => {
                 if (!r.ok) throw new Error((await r.json()).detail);
             });
-            
+
             // Auto login after registration
             const fd = new FormData();
             fd.append('username', username);
@@ -653,8 +653,8 @@ function renderDocuments() {
                     👁 Open
                 </button>
                 ${(state.user.role === 'admin' || state.user.id === doc.uploader_id)
-                    ? `<button class="btn btn-danger" onclick="deleteDocument('${doc.id}')">Delete</button>`
-                    : ''}
+                ? `<button class="btn btn-danger" onclick="deleteDocument('${doc.id}')">Delete</button>`
+                : ''}
             </div>
         </div>`;
     }).join('');
@@ -697,7 +697,7 @@ let selectedUploadGroups = new Set();
 let selectedUploadUsers = new Set();
 
 const openUploadBtn = document.getElementById('open-upload-modal-btn');
-if(openUploadBtn) {
+if (openUploadBtn) {
     openUploadBtn.addEventListener('click', () => openUploadModal());
 }
 
@@ -707,7 +707,7 @@ async function openUploadModal(file = null) {
     selectedUploadUsers.clear();
 
     const modal = document.getElementById('upload-modal');
-    
+
     // Fetch users/groups for dropdowns
     if (state.user) {
         if (!state.groups.length) await fetchGroups(false); // don't render view, just fetch
@@ -815,10 +815,13 @@ function closeUploadModal() {
     pendingUploadFile = null;
 }
 
-window.toggleAccessType = function(type) {
+window.toggleAccessType = function (type) {
     const btnAll = document.getElementById('btn-access-all');
     const btnRestricted = document.getElementById('btn-access-restricted');
     const panel = document.getElementById('restricted-panel');
+    const uploadBtn = document.querySelector('.upload-modal-footer .btn-primary');
+
+    const userHasNoGroups = state.user && state.user.role !== 'admin' && state.groups.length === 0;
 
     if (type === 'all') {
         btnAll.classList.add('active');
@@ -826,24 +829,31 @@ window.toggleAccessType = function(type) {
         panel.classList.remove('visible');
         selectedUploadGroups.clear();
         selectedUploadUsers.clear();
-        // Uncheck all group boxes
         document.querySelectorAll('#upload-group-list input[type="checkbox"]').forEach(cb => cb.checked = false);
         renderUploadSelectedUsers();
+        if (uploadBtn) {
+            uploadBtn.disabled = false;
+            uploadBtn.title = '';
+        }
     } else {
         btnRestricted.classList.add('active');
         btnAll.classList.remove('active');
         panel.classList.add('visible');
+        if (uploadBtn && userHasNoGroups) {
+            uploadBtn.disabled = true;
+            uploadBtn.title = 'Вы не состоите ни в одной группе — невозможно ограничить доступ';
+        }
     }
 }
 
-window.toggleUploadGroup = function(groupId, isChecked) {
+window.toggleUploadGroup = function (groupId, isChecked) {
     if (isChecked) selectedUploadGroups.add(groupId);
     else selectedUploadGroups.delete(groupId);
 }
 
 // User Search
 let userSearchTimeout = null;
-window.debounceUserSearch = function(query, context) {
+window.debounceUserSearch = function (query, context) {
     clearTimeout(userSearchTimeout);
     userSearchTimeout = setTimeout(() => searchUsersApi(query, context), 300);
 }
@@ -872,20 +882,20 @@ async function searchUsersApi(query, context) {
     }
 }
 
-window.selectUser = function(id, username, context) {
+window.selectUser = function (id, username, context) {
     document.getElementById(context === 'upload' ? 'upload-user-results' : 'group-user-results').style.display = 'none';
     document.getElementById(context === 'upload' ? 'upload-user-search' : 'group-user-search').value = '';
-    
+
     if (context === 'upload') {
-        selectedUploadUsers.add({id, username});
+        selectedUploadUsers.add({ id, username });
         renderUploadSelectedUsers();
     } else {
-        selectedGroupUsers.add({id, username});
+        selectedGroupUsers.add({ id, username });
         renderGroupSelectedUsers();
     }
 }
 
-window.removeUploadUser = function(id) {
+window.removeUploadUser = function (id) {
     for (let u of selectedUploadUsers) {
         if (u.id === id) { selectedUploadUsers.delete(u); break; }
     }
@@ -894,7 +904,7 @@ window.removeUploadUser = function(id) {
 
 function renderUploadSelectedUsers() {
     const container = document.getElementById('upload-selected-users');
-    if(!container) return;
+    if (!container) return;
     container.innerHTML = Array.from(selectedUploadUsers).map(u => `
         <div class="chip">
             👤 ${escapeHtml(u.username)}
@@ -911,7 +921,7 @@ async function submitUpload() {
 
     const title = document.getElementById('upload-title').value.trim();
     const desc = document.getElementById('upload-desc').value.trim();
-    
+
     const formData = new FormData();
     formData.append('file', pendingUploadFile);
     if (title) formData.append('title', title);
@@ -957,7 +967,7 @@ async function fetchGroups(render = true) {
 function renderGroups() {
     const container = document.getElementById('groups-list');
     if (!container) return;
-    
+
     if (state.groups.length === 0) {
         container.innerHTML = '<p style="color: var(--text-muted);">No groups found.</p>';
         return;
@@ -981,7 +991,7 @@ function renderGroups() {
     `).join('');
 }
 
-window.deleteGroup = async function(id) {
+window.deleteGroup = async function (id) {
     if (!confirm('Delete this group?')) return;
     try {
         await apiFetch(`/groups/${id}`, { method: 'DELETE' });
@@ -990,13 +1000,13 @@ window.deleteGroup = async function(id) {
     } catch (e) { console.error(e); }
 }
 
-window.toggleGroupMembers = async function(groupId) {
+window.toggleGroupMembers = async function (groupId) {
     const panel = document.getElementById(`group-panel-${groupId}`);
     if (panel.classList.contains('open')) {
         panel.classList.remove('open');
         return;
     }
-    
+
     // Close others
     document.querySelectorAll('.group-members-panel').forEach(p => p.classList.remove('open'));
     panel.classList.add('open');
@@ -1031,7 +1041,7 @@ window.toggleGroupMembers = async function(groupId) {
 }
 
 let addMemberTimeout = null;
-window.debounceAddMemberSearch = function(query, groupId) {
+window.debounceAddMemberSearch = function (query, groupId) {
     clearTimeout(addMemberTimeout);
     addMemberTimeout = setTimeout(() => searchAddMemberApi(query, groupId), 300);
 }
@@ -1054,10 +1064,10 @@ async function searchAddMemberApi(query, groupId) {
             `).join('');
         }
         dropdown.style.display = 'block';
-    } catch(e) {}
+    } catch (e) { }
 }
 
-window.addMemberToGroup = async function(groupId, userId) {
+window.addMemberToGroup = async function (groupId, userId) {
     try {
         await apiFetch(`/groups/${groupId}/members`, {
             method: 'POST',
@@ -1070,7 +1080,7 @@ window.addMemberToGroup = async function(groupId, userId) {
     } catch (e) { console.error(e); }
 }
 
-window.removeMember = async function(groupId, userId) {
+window.removeMember = async function (groupId, userId) {
     try {
         await apiFetch(`/groups/${groupId}/members/${userId}`, { method: 'DELETE' });
         showToast('Member removed');
@@ -1108,7 +1118,7 @@ document.getElementById('create-group-btn')?.addEventListener('click', () => {
     modal.style.display = 'flex';
 });
 
-window.submitCreateGroup = async function() {
+window.submitCreateGroup = async function () {
     const name = document.getElementById('new-group-name').value.trim();
     const desc = document.getElementById('new-group-desc').value.trim();
     if (!name) return showToast('Name is required', 'error');

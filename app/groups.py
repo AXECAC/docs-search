@@ -47,8 +47,22 @@ async def list_groups(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Список всех групп. Доступен для всех авторизованных пользователей."""
-    result = await db.execute(select(Group).order_by(Group.name))
+    """
+    Список групп.
+    Администраторы видят все группы.
+    Обычные пользователи — только те группы, в которых они состоят.
+    """
+    if current_user.role == "admin":
+        stmt = select(Group).order_by(Group.name)
+    else:
+        stmt = (
+            select(Group)
+            .join(user_groups, Group.id == user_groups.c.group_id)
+            .where(user_groups.c.user_id == current_user.id)
+            .order_by(Group.name)
+        )
+
+    result = await db.execute(stmt)
     groups = result.scalars().all()
 
     # Подсчитываем количество участников для каждой группы
