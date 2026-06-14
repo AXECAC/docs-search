@@ -106,6 +106,22 @@ function logout() {
     state.isAuthenticated = false;
     state.user = null;
     state.activeTab = 'dashboard';
+    state.documents = [];
+    state.groups = [];
+    
+    // Сброс UI-полей
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.value = '';
+    
+    const searchResults = document.getElementById('search-results');
+    if (searchResults) searchResults.innerHTML = '';
+    
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) chatInput.value = '';
+    
+    const chatMessages = document.getElementById('chat-messages');
+    if (chatMessages) chatMessages.innerHTML = '';
+
     render();
 }
 
@@ -200,6 +216,25 @@ async function openDocModal(documentId, documentTitle, extension) {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
+    // Загружаем метаданные документа
+    let docMeta = null;
+    try {
+        const token = localStorage.getItem('access_token');
+        const metaRes = await fetch(`${API_URL}/documents/${documentId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (metaRes.ok) docMeta = await metaRes.json();
+    } catch (_) {}
+
+    const metaHtml = docMeta ? `
+        <div class="doc-modal-meta">
+            ${docMeta.author ? `<span>✍️ Автор: <strong>${escapeHtml(docMeta.author)}</strong></span>` : ''}
+            ${docMeta.uploader_username ? `<span>👤 Загрузил: <strong>${escapeHtml(docMeta.uploader_username)}</strong></span>` : ''}
+            ${docMeta.upload_date ? `<span>📅 Дата: <strong>${new Date(docMeta.upload_date).toLocaleDateString('ru-RU')}</strong></span>` : ''}
+            ${docMeta.size_bytes ? `<span>📦 Размер: <strong>${formatBytes(docMeta.size_bytes)}</strong></span>` : ''}
+            ${docMeta.description ? `<span style="grid-column:1/-1">📝 ${escapeHtml(docMeta.description)}</span>` : ''}
+        </div>` : '';
+
     // Загружаем файл через fetch с авторизацией
     try {
         const token = localStorage.getItem('access_token');
@@ -220,14 +255,15 @@ async function openDocModal(documentId, documentTitle, extension) {
 
         // Тело модалки
         if (INLINE_EXTS.has(ext)) {
-            body.innerHTML = `<iframe src="${blobUrl}" title="${escapeHtml(documentTitle || 'Document')}"></iframe>`;
-            // Освобождаем blob URL когда iframe загрузился
-            body.querySelector('iframe').onload = () => {};
+            body.innerHTML = `
+                ${metaHtml}
+                <iframe src="${blobUrl}" title="${escapeHtml(documentTitle || 'Document')}" style="flex:1; border:none; width:100%; min-height:0;"></iframe>`;
         } else {
             body.innerHTML = `
                 <div class="doc-download-prompt">
                     <div class="file-icon">${EXT_ICONS[ext] || '📄'}</div>
                     <h3>${escapeHtml(documentTitle || 'Document')}</h3>
+                    ${metaHtml}
                     <p>Формат <strong>.${ext.toUpperCase()}</strong> нельзя отобразить прямо в браузере.
                     Нажмите кнопку ниже, чтобы скачать файл.</p>
                     <a href="${blobUrl}" download="${escapeHtml(documentTitle || 'document')}"
@@ -535,12 +571,18 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
             }).then(async r => {
                 if (!r.ok) throw new Error((await r.json()).detail);
             });
-            showToast('Registered successfully. Please login.');
-            state.isLoginMode = true;
-            render();
-            btn.innerHTML = 'Login';
-            btn.disabled = false;
-            return;
+            
+            // Auto login after registration
+            const fd = new FormData();
+            fd.append('username', username);
+            fd.append('password', password);
+            const data = await fetch(`${API_URL}/auth/login`, { method: 'POST', body: fd }).then(async r => {
+                if (!r.ok) throw new Error((await r.json()).detail);
+                return r.json();
+            });
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('refresh_token', data.refresh_token);
+            showToast('Registered successfully!');
         }
 
         await checkAuth();
@@ -590,6 +632,7 @@ function renderDocuments() {
         const extRaw = (doc.extension || '').replace('.', '').toLowerCase();
         const extLabel = extRaw ? extRaw.toUpperCase() : 'UNKNOWN';
         const docIcon = EXT_ICONS[extRaw] || '📄';
+        const uploaderLabel = doc.uploader_username ? `👤 ${escapeHtml(doc.uploader_username)}` : '';
         return `
         <div class="doc-card glass">
             <div class="doc-header">
@@ -599,6 +642,7 @@ function renderDocuments() {
             <div class="doc-meta">
                 <span>Size: ${formatBytes(doc.size_bytes)}</span>
                 <span>Date: ${new Date(doc.upload_date).toLocaleDateString()}</span>
+                ${uploaderLabel ? `<span>${uploaderLabel}</span>` : ''}
             </div>
             <div style="margin-top: auto; display: flex; gap: 0.5rem; justify-content: flex-end;">
                 <button class="btn btn-outline"
@@ -719,12 +763,14 @@ async function openUploadModal(file = null) {
                             ${state.groups.length === 0 ? '<div style="padding:0.5rem; font-size:0.8rem; color:var(--text-muted);">No groups available</div>' : ''}
                         </div>
 
-                        <label style="font-size:0.75rem;">Specific Users (by username)</label>
+                        ${state.user && state.user.role === 'admin' ? `
+                        <label style="font-size:0.75rem; margin-top: 0.5rem;">Specific Users (by username)</label>
                         <div class="search-wrap">
                             <input type="text" class="input-control" id="upload-user-search" placeholder="Type username..." oninput="debounceUserSearch(this.value, 'upload')" style="width:100%">
                             <div id="upload-user-results" class="search-results-dropdown" style="display:none;"></div>
                         </div>
                         <div class="user-chips" id="upload-selected-users"></div>
+                        ` : ''}
                     </div>
                 </div>
 

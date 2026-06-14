@@ -59,6 +59,7 @@ class DocumentResponse(BaseModel):
     title: str
     author: str | None = None
     uploader_id: UUID | None = None
+    uploader_username: str | None = None
     upload_date: datetime
     last_edited: datetime
     extension: str | None = None

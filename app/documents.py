@@ -152,6 +152,34 @@ async def upload_document(
 
 
 # ──────────────────────────────────────────
+# Helpers
+# ──────────────────────────────────────────
+
+async def _enrich_with_uploader(document: Document, db: AsyncSession) -> DocumentResponse:
+    """Добавляет имя загрузчика к ответу документа."""
+    uploader_username = None
+    if document.uploader_id:
+        result = await db.execute(select(User).where(User.id == document.uploader_id))
+        uploader = result.scalar_one_or_none()
+        if uploader:
+            uploader_username = uploader.username
+    return DocumentResponse(
+        id=document.id,
+        title=document.title,
+        author=document.author,
+        uploader_id=document.uploader_id,
+        uploader_username=uploader_username,
+        upload_date=document.upload_date,
+        last_edited=document.last_edited,
+        extension=document.extension,
+        size_bytes=document.size_bytes,
+        description=document.description,
+        is_available_to=document.is_available_to,
+        available_to_groups=document.available_to_groups,
+    )
+
+
+# ──────────────────────────────────────────
 # List / Get
 # ──────────────────────────────────────────
 
@@ -162,33 +190,34 @@ async def list_documents(
 ):
     if current_user.role == "admin":
         result = await db.execute(select(Document))
-        return result.scalars().all()
+        docs = result.scalars().all()
+    else:
+        # Для обычных пользователей учитываем и группы
+        user_group_ids = await _get_user_group_ids(current_user.id, db)
 
-    # Для обычных пользователей учитываем и группы
-    user_group_ids = await _get_user_group_ids(current_user.id, db)
+        group_conditions = [
+            Document.available_to_groups.has_key(gid)
+            for gid in user_group_ids
+        ]
 
-    group_conditions = [
-        Document.available_to_groups.has_key(gid)
-        for gid in user_group_ids
-    ]
-
-    query = select(Document).where(
-        or_(
-            Document.uploader_id == current_user.id,
-            # Публичный — оба списка пусты
-            and_(
-                or_(Document.is_available_to.is_(None), cast(Document.is_available_to, String).in_(('null', '[]'))),
-                or_(Document.available_to_groups.is_(None), cast(Document.available_to_groups, String).in_(('null', '[]')))
-            ),
-            # Явный доступ пользователю
-            Document.is_available_to.has_key(str(current_user.id)),
-            # Доступ через группу
-            *group_conditions,
+        query = select(Document).where(
+            or_(
+                Document.uploader_id == current_user.id,
+                # Публичный — оба списка пусты
+                and_(
+                    or_(Document.is_available_to.is_(None), cast(Document.is_available_to, String).in_(('null', '[]'))),
+                    or_(Document.available_to_groups.is_(None), cast(Document.available_to_groups, String).in_(('null', '[]')))
+                ),
+                # Явный доступ пользователю
+                Document.is_available_to.has_key(str(current_user.id)),
+                # Доступ через группу
+                *group_conditions,
+            )
         )
-    )
+        result = await db.execute(query)
+        docs = result.scalars().all()
 
-    result = await db.execute(query)
-    return result.scalars().all()
+    return [await _enrich_with_uploader(doc, db) for doc in docs]
 
 
 @router.get("/{doc_id}", response_model=DocumentResponse)
@@ -205,7 +234,7 @@ async def get_document(
     if not await check_document_access(document, current_user, db):
         raise HTTPException(status_code=403, detail="Access denied")
 
-    return document
+    return await _enrich_with_uploader(document, db)
 
 
 # ──────────────────────────────────────────
