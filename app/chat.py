@@ -38,6 +38,7 @@ async def generate_chat_response(query: str, current_user: User, db: AsyncSessio
         {
             "document_id": r.document_id,
             "document_title": r.document_title,
+            "extension": r.extension,
             "score": r.score
         } for r in search_results
     ]

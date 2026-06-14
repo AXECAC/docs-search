@@ -10,3 +10,4 @@ pyvenv.cfg
 tree.txt
 __pycache__
 uploads/*
+report/
