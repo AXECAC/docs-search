@@ -72,6 +72,14 @@ class DocumentResponse(BaseModel):
         from_attributes = True
 
 
+class PaginatedDocuments(BaseModel):
+    items: list[DocumentResponse]
+    total: int
+    page: int
+    pages: int
+    page_size: int
+
+
 class DocumentUpdateRequest(BaseModel):
     title: str | None = None
     author: str | None = None

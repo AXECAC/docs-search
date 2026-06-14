@@ -49,10 +49,17 @@
                 </button>
             </div>
 
+            <div class="docs-search-bar">
+                <input type="text" id="docs-filter-input" class="input-control"
+                    placeholder="🔍 Search by title..." oninput="onDocsFilter(this.value)"
+                    style="max-width: 400px;">
+            </div>
 
             <div class="docs-grid" id="docs-grid">
                 <!-- Documents injected here -->
             </div>
+
+            <div id="docs-pagination" class="docs-pagination"></div>
         </div>
 
         <!-- Search View -->

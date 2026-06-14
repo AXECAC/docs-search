@@ -9,6 +9,7 @@ let state = {
     groups: [],
     users: [],
     activeTab: 'dashboard',
+    docsPagination: { total: 0, page: 1, pages: 1, page_size: 12 },
 };
 
 // DOM Elements
@@ -108,6 +109,9 @@ function logout() {
     state.activeTab = 'dashboard';
     state.documents = [];
     state.groups = [];
+    state.docsPagination = { total: 0, page: 1, pages: 1, page_size: 12 };
+    docsCurrentPage = 1;
+    docsFilterQuery = '';
 
     // Сброс UI-полей
     const searchInput = document.getElementById('search-input');
@@ -167,7 +171,14 @@ function switchTab(tabName) {
 // ─────────────────────────────────────────────────────────────
 async function fetchDocuments() {
     try {
-        state.documents = await apiFetch('/documents');
+        const params = new URLSearchParams({
+            search: docsFilterQuery,
+            page: docsCurrentPage,
+            page_size: DOCS_PAGE_SIZE,
+        });
+        const data = await apiFetch(`/documents?${params}`);
+        state.documents = data.items;
+        state.docsPagination = { total: data.total, page: data.page, pages: data.pages, page_size: data.page_size };
         renderDocuments();
     } catch (e) { console.error(e); }
 }
@@ -621,10 +632,24 @@ function formatBytes(bytes, decimals = 2) {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
+const DOCS_PAGE_SIZE = 12;
+let docsCurrentPage = 1;
+let docsFilterQuery = '';
+
+function onDocsFilter(value) {
+    docsFilterQuery = value.trim().toLowerCase();
+    docsCurrentPage = 1;
+    fetchDocuments();
+}
+window.onDocsFilter = onDocsFilter;
+
 function renderDocuments() {
     const grid = document.getElementById('docs-grid');
-    if (state.documents.length === 0) {
-        grid.innerHTML = '<p style="color: var(--text-muted);">No documents found.</p>';
+    const paginationEl = document.getElementById('docs-pagination');
+
+    if (!state.documents || state.documents.length === 0) {
+        grid.innerHTML = `<p style="color: var(--text-muted);">${docsFilterQuery ? 'No documents match your search.' : 'No documents found.'}</p>`;
+        if (paginationEl) paginationEl.innerHTML = '';
         return;
     }
 
@@ -658,6 +683,32 @@ function renderDocuments() {
             </div>
         </div>`;
     }).join('');
+
+    // Пагинация по метаданным с сервера
+    if (paginationEl) {
+        const { page, pages } = state.docsPagination || { page: 1, pages: 1 };
+        if (pages <= 1) {
+            paginationEl.innerHTML = '';
+        } else {
+            const btns = [];
+            for (let i = 1; i <= pages; i++) {
+                btns.push(`<button class="pagination-btn ${i === page ? 'active' : ''}" onclick="goToDocsPage(${i})">${i}</button>`);
+            }
+            paginationEl.innerHTML = `
+                <button class="pagination-btn" onclick="goToDocsPage(${page - 1})" ${page === 1 ? 'disabled' : ''}>‹</button>
+                ${btns.join('')}
+                <button class="pagination-btn" onclick="goToDocsPage(${page + 1})" ${page === pages ? 'disabled' : ''}>›</button>
+            `;
+        }
+    }
+}
+
+window.goToDocsPage = function(page) {
+    const { pages } = state.docsPagination || { pages: 1 };
+    if (page < 1 || page > pages) return;
+    docsCurrentPage = page;
+    fetchDocuments();
+    document.getElementById('docs-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function render() {

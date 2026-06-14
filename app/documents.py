@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import or_, and_, cast, String
+from sqlalchemy import or_, and_, cast, String, func
 import mimetypes
 import uuid
 import os
@@ -11,6 +11,7 @@ from app.database import get_db
 from app.models import User, Document, Chunk, user_groups
 from app.schemas import (
     DocumentResponse, DocumentUploadResponse, DocumentUpdateRequest,
+    PaginatedDocuments,
     ChunkResponse, SearchRequest, SearchResultItem,
 )
 from app.auth import get_current_user
@@ -183,41 +184,55 @@ async def _enrich_with_uploader(document: Document, db: AsyncSession) -> Documen
 # List / Get
 # ──────────────────────────────────────────
 
-@router.get("", response_model=list[DocumentResponse])
+@router.get("", response_model=PaginatedDocuments)
 async def list_documents(
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    search: str = Query(default="", description="Filter by title substring"),
+    page: int = Query(default=1, ge=1, description="Page number (1-indexed)"),
+    page_size: int = Query(default=12, ge=1, le=100, description="Items per page"),
 ):
+    # Базовое условие доступности
     if current_user.role == "admin":
-        result = await db.execute(select(Document))
-        docs = result.scalars().all()
+        access_filter = True  # без ограничений
+        base_query = select(Document)
     else:
-        # Для обычных пользователей учитываем и группы
         user_group_ids = await _get_user_group_ids(current_user.id, db)
-
         group_conditions = [
             Document.available_to_groups.has_key(gid)
             for gid in user_group_ids
         ]
-
-        query = select(Document).where(
-            or_(
-                Document.uploader_id == current_user.id,
-                # Публичный — оба списка пусты
-                and_(
-                    or_(Document.is_available_to.is_(None), cast(Document.is_available_to, String).in_(('null', '[]'))),
-                    or_(Document.available_to_groups.is_(None), cast(Document.available_to_groups, String).in_(('null', '[]')))
-                ),
-                # Явный доступ пользователю
-                Document.is_available_to.has_key(str(current_user.id)),
-                # Доступ через группу
-                *group_conditions,
-            )
+        access_where = or_(
+            Document.uploader_id == current_user.id,
+            and_(
+                or_(Document.is_available_to.is_(None), cast(Document.is_available_to, String).in_(('null', '[]'))),
+                or_(Document.available_to_groups.is_(None), cast(Document.available_to_groups, String).in_(('null', '[]')))
+            ),
+            Document.is_available_to.has_key(str(current_user.id)),
+            *group_conditions,
         )
-        result = await db.execute(query)
-        docs = result.scalars().all()
+        base_query = select(Document).where(access_where)
 
-    return [await _enrich_with_uploader(doc, db) for doc in docs]
+    # Фильтр по названию
+    if search:
+        base_query = base_query.where(Document.title.ilike(f"%{search}%"))
+
+    # Подсчёт общего количества
+    count_result = await db.execute(
+        select(func.count()).select_from(base_query.subquery())
+    )
+    total = count_result.scalar() or 0
+
+    # Пагинация
+    offset = (page - 1) * page_size
+    paged_query = base_query.order_by(Document.upload_date.desc()).offset(offset).limit(page_size)
+    result = await db.execute(paged_query)
+    docs = result.scalars().all()
+
+    pages = max(1, -(-total // page_size))  # ceiling division
+
+    items = [await _enrich_with_uploader(doc, db) for doc in docs]
+    return PaginatedDocuments(items=items, total=total, page=page, pages=pages, page_size=page_size)
 
 
 @router.get("/{doc_id}", response_model=DocumentResponse)
