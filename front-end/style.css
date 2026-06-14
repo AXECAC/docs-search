@@ -1,7 +1,7 @@
 :root {
     --primary: #6366f1;
     --primary-hover: #4f46e5;
-    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    --bg-color: #0f172a;
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --text-main: #f8fafc;
@@ -18,7 +18,7 @@
 }
 
 body {
-    background: var(--bg-gradient);
+    background: var(--bg-color);
     color: var(--text-main);
     min-height: 100vh;
     display: flex;
@@ -53,9 +53,7 @@ header {
     font-size: 1.25rem;
     font-weight: 700;
     letter-spacing: -0.025em;
-    background: linear-gradient(to right, #818cf8, #c084fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #818cf8;
 }
 
 .nav-actions {

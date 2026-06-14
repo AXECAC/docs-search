@@ -202,9 +202,9 @@ window.deleteDocument = deleteDocument;
 const INLINE_EXTS = new Set(['pdf', 'txt', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);
 
 const EXT_ICONS = {
-    pdf: '📕', txt: '📝', png: '🖼', jpg: '🖼', jpeg: '🖼', gif: '🖼',
-    webp: '🖼', svg: '🖼', docx: '📘', doc: '📘', xlsx: '📗', xls: '📗',
-    pptx: '📙', ppt: '📙',
+    pdf: 'PDF', txt: 'TXT', png: 'IMG', jpg: 'IMG', jpeg: 'IMG', gif: 'IMG',
+    webp: 'IMG', svg: 'IMG', docx: 'DOC', doc: 'DOC', xlsx: 'XLS', xls: 'XLS',
+    pptx: 'PPT', ppt: 'PPT',
 };
 
 async function openDocModal(documentId, documentTitle, extension) {
@@ -239,11 +239,11 @@ async function openDocModal(documentId, documentTitle, extension) {
 
     const metaHtml = docMeta ? `
         <div class="doc-modal-meta">
-            ${docMeta.author ? `<span>✍️ Автор: <strong>${escapeHtml(docMeta.author)}</strong></span>` : ''}
-            ${docMeta.uploader_username ? `<span>👤 Загрузил: <strong>${escapeHtml(docMeta.uploader_username)}</strong></span>` : ''}
-            ${docMeta.upload_date ? `<span>📅 Дата: <strong>${new Date(docMeta.upload_date).toLocaleDateString('ru-RU')}</strong></span>` : ''}
-            ${docMeta.size_bytes ? `<span>📦 Размер: <strong>${formatBytes(docMeta.size_bytes)}</strong></span>` : ''}
-            ${docMeta.description ? `<span style="grid-column:1/-1">📝 ${escapeHtml(docMeta.description)}</span>` : ''}
+            ${docMeta.author ? `<span>Автор: <strong>${escapeHtml(docMeta.author)}</strong></span>` : ''}
+            ${docMeta.uploader_username ? `<span>Загрузил: <strong>${escapeHtml(docMeta.uploader_username)}</strong></span>` : ''}
+            ${docMeta.upload_date ? `<span>Дата: <strong>${new Date(docMeta.upload_date).toLocaleDateString('ru-RU')}</strong></span>` : ''}
+            ${docMeta.size_bytes ? `<span>Размер: <strong>${formatBytes(docMeta.size_bytes)}</strong></span>` : ''}
+            ${docMeta.description ? `<span style="grid-column:1/-1">${escapeHtml(docMeta.description)}</span>` : ''}
         </div>` : '';
 
     // Загружаем файл через fetch с авторизацией
@@ -272,7 +272,7 @@ async function openDocModal(documentId, documentTitle, extension) {
         } else {
             body.innerHTML = `
                 <div class="doc-download-prompt">
-                    <div class="file-icon">${EXT_ICONS[ext] || '📄'}</div>
+                    <div class="file-icon">${EXT_ICONS[ext] || 'DOC'}</div>
                     <h3>${escapeHtml(documentTitle || 'Document')}</h3>
                     ${metaHtml}
                     <p>Формат <strong>.${ext.toUpperCase()}</strong> нельзя отобразить прямо в браузере.
@@ -289,7 +289,7 @@ async function openDocModal(documentId, documentTitle, extension) {
 
     } catch (e) {
         body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--danger)">
-            ❌ Ошибка загрузки файла: ${escapeHtml(e.message)}
+            Ошибка загрузки файла: ${escapeHtml(e.message)}
         </div>`;
     }
 }
@@ -367,7 +367,7 @@ function renderSearchResults(results, query) {
         const scorePercent = Math.min(100, Math.round(r.score * 100));
         const keywords = (r.keywords || []).slice(0, 8);
         const snippet = r.text.length > 400 ? r.text.slice(0, 400) + '…' : r.text;
-        const docIcon = EXT_ICONS[extRaw] || '📄';
+        const docIcon = EXT_ICONS[extRaw] || '';
 
         return `
         <div class="result-card glass" style="animation-delay: ${i * 0.04}s">
@@ -505,7 +505,7 @@ async function performChat(query) {
                                     data-doc-ext="${ext}"
                                     onclick="openDocModal(this.dataset.docId, this.dataset.docTitle, this.dataset.docExt)"
                                     title="Открыть документ">
-                                    ${EXT_ICONS[ext] || '📄'} ${escapeHtml(s.document_title)}
+                                    ${EXT_ICONS[ext] || ''} ${escapeHtml(s.document_title)}
                                 </span>`;
                             }).join(' ');
                             sourcesHtml = `<div class="sources-box">
@@ -663,8 +663,8 @@ function renderDocuments() {
     grid.innerHTML = state.documents.map(doc => {
         const extRaw = (doc.extension || '').replace('.', '').toLowerCase();
         const extLabel = extRaw ? extRaw.toUpperCase() : 'UNKNOWN';
-        const docIcon = EXT_ICONS[extRaw] || '📄';
-        const uploaderLabel = doc.uploader_username ? `👤 ${escapeHtml(doc.uploader_username)}` : '';
+        const docIcon = EXT_ICONS[extRaw] || '';
+        const uploaderLabel = doc.uploader_username ? `Uploader: ${escapeHtml(doc.uploader_username)}` : '';
         return `
         <div class="doc-card glass">
             <div class="doc-header">
@@ -682,12 +682,12 @@ function renderDocuments() {
                     data-doc-title="${escapeHtml(doc.title || 'Untitled')}"
                     data-doc-ext="${extRaw}"
                     onclick="openDocModal(this.dataset.docId, this.dataset.docTitle, this.dataset.docExt)">
-                    👁 Open
+                    Open
                 </button>
                 ${(state.user.role === 'admin' || state.user.id === doc.uploader_id) ? `
                     <button class="btn btn-outline" style="color: var(--primary);"
                         onclick="openDocAccessModal('${doc.id}', ${JSON.stringify(doc.available_to_groups || []).replace(/"/g, '&quot;')})">
-                        ⚙️ Access
+                        Access
                     </button>
                     <button class="btn btn-danger" onclick="deleteDocument('${doc.id}')">Delete</button>
                 ` : ''}
@@ -747,7 +747,7 @@ window.openDocAccessModal = async function(docId, currentGroupsRaw) {
     modal.innerHTML = `
         <div class="doc-modal-panel upload-modal-panel" style="max-width: 460px;">
             <div class="dashboard-header" style="padding: 1.5rem; border-bottom: 1px solid var(--glass-border); margin-bottom: 0;">
-                <h3 style="margin:0;">⚙️ Document Access</h3>
+                <h3 style="margin:0;">Document Access</h3>
                 <button class="btn btn-outline" onclick="closeDocAccessModal()" style="padding: 0.4rem 0.8rem;">✕</button>
             </div>
             <div class="upload-modal-body">
@@ -777,7 +777,7 @@ window.openDocAccessModal = async function(docId, currentGroupsRaw) {
                 `}
 
                 <div id="doc-access-status" style="margin-top: 1rem; font-size:0.8rem; color:var(--text-muted);">
-                    ${docAccessSelectedGroups.size === 0 ? '🌐 Документ публичный' : `🔒 Доступ ограничен: ${docAccessSelectedGroups.size} гр.`}
+                    ${docAccessSelectedGroups.size === 0 ? 'Документ публичный' : `Доступ ограничен: ${docAccessSelectedGroups.size} гр.`}
                 </div>
             </div>
             <div class="upload-modal-footer">
@@ -798,8 +798,8 @@ window.toggleDocAccessGroup = function(groupId, isChecked) {
     const statusEl = document.getElementById('doc-access-status');
     if (statusEl) {
         statusEl.textContent = docAccessSelectedGroups.size === 0
-            ? '🌐 Документ публичный'
-            : `🔒 Доступ ограничен: ${docAccessSelectedGroups.size} гр.`;
+            ? 'Документ публичный'
+            : `Доступ ограничен: ${docAccessSelectedGroups.size} гр.`;
     }
 }
 
@@ -892,7 +892,7 @@ async function openUploadModal(file = null) {
                 
                 <!-- File Drop Zone -->
                 <div class="file-drop-zone" id="modal-drop-zone" onclick="document.getElementById('modalFileInput').click()">
-                    <span class="file-drop-icon">📄</span>
+                    <span class="file-drop-icon">DOC</span>
                     <h4 id="modal-drop-text">${file ? 'File selected' : 'Click or Drag & Drop file here'}</h4>
                     <div id="modal-file-name" class="file-selected-name">${file ? file.name : ''}</div>
                     <input type="file" id="modalFileInput" style="display: none;">
@@ -1076,7 +1076,7 @@ function renderUploadSelectedUsers() {
     if (!container) return;
     container.innerHTML = Array.from(selectedUploadUsers).map(u => `
         <div class="chip">
-            👤 ${escapeHtml(u.username)}
+            ${escapeHtml(u.username)}
             <span class="chip-remove" onclick="removeUploadUser('${u.id}')">✕</span>
         </div>
     `).join('');
@@ -1188,7 +1188,7 @@ window.toggleGroupMembers = async function (groupId) {
                 ${members.map(m => `
                     <div class="member-row">
                         <div class="member-info">
-                            <span>👤 ${escapeHtml(m.username)}</span>
+                            <span>${escapeHtml(m.username)}</span>
                             <span class="member-role">${m.role}</span>
                         </div>
                         <button class="btn btn-outline" style="border-color:var(--danger); color:var(--danger); padding:0.2rem 0.5rem; font-size:0.7rem;" 

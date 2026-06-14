@@ -12,10 +12,10 @@
     <header>
         <div class="logo">DocsSearch</div>
         <nav class="tab-nav" id="tab-nav" style="display: none;">
-            <button class="tab-btn active" data-tab="dashboard">📁 Documents</button>
-            <button class="tab-btn" data-tab="search">🔍 Search</button>
-            <button class="tab-btn" data-tab="chat">💬 AI Chat</button>
-            <button class="tab-btn admin-only" data-tab="groups" style="display:none;">👥 Groups</button>
+            <button class="tab-btn active" data-tab="dashboard">Documents</button>
+            <button class="tab-btn" data-tab="search">Search</button>
+            <button class="tab-btn" data-tab="chat">AI Chat</button>
+            <button class="tab-btn admin-only" data-tab="groups" style="display:none;">Groups</button>
         </nav>
         <div class="nav-actions" id="nav-actions">
             <!-- Dynamically populated -->
@@ -51,7 +51,7 @@
 
             <div class="docs-search-bar">
                 <input type="text" id="docs-filter-input" class="input-control"
-                    placeholder="🔍 Search by title..." oninput="onDocsFilter(this.value)"
+                    placeholder="Search by title..." oninput="onDocsFilter(this.value)"
                     style="max-width: 400px;">
             </div>
 
@@ -86,7 +86,7 @@
         <!-- Groups View (admin only) -->
         <div id="groups-view" class="view">
             <div class="dashboard-header">
-                <h2>👥 Group Management</h2>
+                <h2>Group Management</h2>
                 <button class="btn btn-primary" id="create-group-btn">+ New Group</button>
             </div>
             <div id="groups-list" class="groups-list">
@@ -134,8 +134,8 @@
                     <span class="doc-modal-title" id="modal-title">Document</span>
                 </div>
                 <div class="doc-modal-actions">
-                    <a id="modal-download-btn" class="btn btn-outline" href="#" download>⬇ Download</a>
-                    <button class="btn btn-outline" onclick="closeDocModal()">✕ Close</button>
+                    <a id="modal-download-btn" class="btn btn-outline" href="#" download>Download</a>
+                    <button class="btn btn-outline" onclick="closeDocModal()">Close</button>
                 </div>
             </div>
             <div class="doc-modal-body" id="modal-body">
