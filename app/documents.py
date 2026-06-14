@@ -291,7 +291,7 @@ async def update_document(
 
     await db.commit()
     await db.refresh(document)
-    return document
+    return await _enrich_with_uploader(document, db)
 
 
 # ──────────────────────────────────────────

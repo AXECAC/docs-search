@@ -8,6 +8,6 @@ share/
 .env*
 pyvenv.cfg
 tree.txt
-__pycache__
+*__pycache__*
 uploads/*
 report/
