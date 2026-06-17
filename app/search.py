@@ -1,5 +1,5 @@
 """
-app/search.py - Гибридный поиск: семантический (Qdrant) + по ключевым словам (PostgreSQL).
+Гибридный поиск: семантический (Qdrant) + по ключевым словам (PostgreSQL).
 """
 import logging
 from typing import List

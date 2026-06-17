@@ -1,4 +1,3 @@
-# app/document_processor.py
 import uuid
 from app.database import AsyncSessionLocal
 from app.models import Chunk

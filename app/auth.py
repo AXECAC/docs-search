@@ -1,5 +1,5 @@
 """
-app/auth.py - Аутентификация: JWT (access + refresh), хэширование паролей,
+Аутентификация: JWT (access + refresh), хэширование паролей,
 зависимости FastAPI и роутер /auth.
 """
 import os
