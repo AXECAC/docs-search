@@ -1,6 +1,6 @@
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Groups Management
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 
 async function fetchGroups(render = true) {
     try {
@@ -138,7 +138,7 @@ window.removeMember = async function (groupId, userId) {
 }
 
 // Create Group logic
-window.openCreateGroupModal = function() {
+window.openCreateGroupModal = function () {
     const modal = document.getElementById('group-modal');
     modal.innerHTML = `
         <div class="doc-modal-panel upload-modal-panel" style="max-width: 400px;">

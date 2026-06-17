@@ -1,5 +1,5 @@
 """
-app/main.py — точка входа FastAPI-приложения.
+app/main.py - точка входа FastAPI-приложения.
 """
 import os
 import logging
@@ -17,14 +17,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Lifespan: инициализация при старте
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 1. Проверяем подключение к БД
-    # Таблицами управляет Alembic — запустите `alembic upgrade head` перед стартом
+    # Таблицами управляет Alembic - запустите `alembic upgrade head` перед стартом
     try:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
@@ -37,12 +37,12 @@ async def lifespan(app: FastAPI):
     logger.info(f"Embedding model loaded, dimension: {get_embedding_dimension()}")
 
     yield
-    # (teardown при завершении — при необходимости добавить сюда)
+    # (teardown при завершении - при необходимости добавить сюда)
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Приложение
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 app = FastAPI(
     title="Docs Search API",
@@ -51,7 +51,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — разрешаем фронтенд на localhost
+# CORS - разрешаем фронтенд на localhost
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -65,9 +65,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Роутеры
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 from app.auth import router as auth_router  # noqa: E402
 from app.documents import router as docs_router
@@ -80,9 +80,9 @@ app.include_router(chat_router)
 app.include_router(groups_router)
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Системные эндпоинты
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 @app.get("/api", tags=["system"])
 def root():

@@ -1,6 +1,6 @@
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Chat Functions
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 function appendMessage(role, content) {
     const messagesContainer = document.getElementById('chat-messages');
     const msgDiv = document.createElement('div');

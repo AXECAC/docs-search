@@ -26,9 +26,9 @@ UPLOAD_DIR = "uploads/raw"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Вспомогательная функция проверки доступа
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 async def check_document_access(document: Document, current_user: User, db: AsyncSession) -> bool:
     """
@@ -70,9 +70,9 @@ async def _get_user_group_ids(user_id: uuid.UUID, db: AsyncSession) -> list[str]
     return [str(row[0]) for row in result.fetchall()]
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Upload
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 @router.post("/upload", response_model=DocumentUploadResponse)
 async def upload_document(
@@ -107,7 +107,7 @@ async def upload_document(
         raw_groups = [g.strip() for g in available_to_groups.split(",") if g.strip()]
         if current_user.role != "admin":
             user_group_ids = await _get_user_group_ids(current_user.id, db)
-            # Фильтруем — только свои группы
+            # Фильтруем - только свои группы
             raw_groups = [g for g in raw_groups if g in user_group_ids]
         for gid in raw_groups:
             try:
@@ -152,9 +152,9 @@ async def upload_document(
     return DocumentUploadResponse(document_id=document_id, status="processing")
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Helpers
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 async def _enrich_with_uploader(document: Document, db: AsyncSession) -> DocumentResponse:
     """Добавляет имя загрузчика к ответу документа."""
@@ -180,9 +180,9 @@ async def _enrich_with_uploader(document: Document, db: AsyncSession) -> Documen
     )
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # List / Get
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 @router.get("", response_model=PaginatedDocuments)
 async def list_documents(
@@ -252,9 +252,9 @@ async def get_document(
     return await _enrich_with_uploader(document, db)
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Update
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 @router.put("/{doc_id}", response_model=DocumentResponse)
 async def update_document(
@@ -281,7 +281,7 @@ async def update_document(
     if request.is_available_to is not None:
         document.is_available_to = [str(u) for u in request.is_available_to] if request.is_available_to else None
     if request.available_to_groups is not None:
-        # Проверяем права: обычный пользователь — только свои группы
+        # Проверяем права: обычный пользователь - только свои группы
         if current_user.role != "admin":
             user_group_ids = await _get_user_group_ids(current_user.id, db)
             filtered = [str(g) for g in request.available_to_groups if str(g) in user_group_ids]
@@ -294,9 +294,9 @@ async def update_document(
     return await _enrich_with_uploader(document, db)
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Delete
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 @router.delete("/{doc_id}")
 async def delete_document(
@@ -326,9 +326,9 @@ async def delete_document(
     return {"status": "deleted"}
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Search
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 @router.post("/search", response_model=list[SearchResultItem])
 async def search_documents(
@@ -351,9 +351,9 @@ async def search_documents(
     return results
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # File Content (Preview / Download)
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 INLINE_EXTENSIONS = {"pdf", "txt", "png", "jpg", "jpeg", "gif", "webp", "svg"}
 
@@ -366,8 +366,8 @@ async def get_document_content(
 ):
     """
     Возвращает оригинальный файл документа.
-    - PDF, TXT, изображения — отдаются inline (отображаются в браузере).
-    - DOCX, XLSX, PPTX и пр. — отдаются как вложение (скачивание).
+    - PDF, TXT, изображения - отдаются inline (отображаются в браузере).
+    - DOCX, XLSX, PPTX и пр. - отдаются как вложение (скачивание).
     Доступ проверяется по правам пользователя, включая группы.
     """
     result = await db.execute(select(Document).where(Document.id == doc_id))

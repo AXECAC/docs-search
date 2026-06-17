@@ -1,6 +1,6 @@
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Document Functions
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 const DOCS_PAGE_SIZE = 12;
 let docsCurrentPage = 1;
 let docsFilterQuery = '';
@@ -109,7 +109,7 @@ function renderDocuments() {
     }
 }
 
-window.goToDocsPage = function(page) {
+window.goToDocsPage = function (page) {
     const { pages } = state.docsPagination || { pages: 1 };
     if (page < 1 || page > pages) return;
     docsCurrentPage = page;
@@ -117,9 +117,9 @@ window.goToDocsPage = function(page) {
     document.getElementById('docs-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Document Preview Modal
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 async function openDocModal(documentId, documentTitle, extension) {
     const modal = document.getElementById('doc-modal');
     const icon = document.getElementById('modal-icon');
@@ -221,9 +221,9 @@ function closeDocModal() {
 window.openDocModal = openDocModal;
 window.closeDocModal = closeDocModal;
 
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Upload Modal & Logic
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 let pendingUploadFile = null;
 let selectedUploadGroups = new Set();
 let selectedUploadUsers = new Set();
@@ -374,7 +374,7 @@ window.toggleAccessType = function (type) {
         panel.classList.add('visible');
         if (uploadBtn && userHasNoGroups) {
             uploadBtn.disabled = true;
-            uploadBtn.title = 'Вы не состоите ни в одной группе — невозможно ограничить доступ';
+            uploadBtn.title = 'Вы не состоите ни в одной группе - невозможно ограничить доступ';
         }
     }
 }

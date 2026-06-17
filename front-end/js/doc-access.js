@@ -1,11 +1,11 @@
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Document Access (Groups) Modal
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 
 let docAccessDocId = null;
 let docAccessSelectedGroups = new Set();
 
-window.openDocAccessModal = async function(docId, currentGroupsRaw) {
+window.openDocAccessModal = async function (docId, currentGroupsRaw) {
     docAccessDocId = docId;
     docAccessSelectedGroups = new Set(
         Array.isArray(currentGroupsRaw) ? currentGroupsRaw : []
@@ -29,7 +29,7 @@ window.openDocAccessModal = async function(docId, currentGroupsRaw) {
             <div class="upload-modal-body">
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 1rem;">
                     Выберите группы, которые имеют доступ к документу.<br>
-                    Если не выбрать ни одной — документ станет <strong>публичным</strong>.
+                    Если не выбрать ни одной - документ станет <strong>публичным</strong>.
                 </p>
 
                 <label style="font-size:0.8rem; margin-bottom: 0.5rem; display:block;">Группы</label>
@@ -67,7 +67,7 @@ window.openDocAccessModal = async function(docId, currentGroupsRaw) {
     document.body.style.overflow = 'hidden';
 }
 
-window.toggleDocAccessGroup = function(groupId, isChecked) {
+window.toggleDocAccessGroup = function (groupId, isChecked) {
     if (isChecked) docAccessSelectedGroups.add(groupId);
     else docAccessSelectedGroups.delete(groupId);
 
@@ -79,14 +79,14 @@ window.toggleDocAccessGroup = function(groupId, isChecked) {
     }
 }
 
-window.closeDocAccessModal = function() {
+window.closeDocAccessModal = function () {
     document.getElementById('group-modal').style.display = 'none';
     document.body.style.overflow = '';
     docAccessDocId = null;
     docAccessSelectedGroups.clear();
 }
 
-window.submitDocAccess = async function() {
+window.submitDocAccess = async function () {
     if (!docAccessDocId) return;
     try {
         await apiFetch(`/documents/${docAccessDocId}`, {

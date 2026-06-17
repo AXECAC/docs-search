@@ -1,4 +1,4 @@
-/* ── Base modal overlay ─────────────────────────── */
+/* -- Base modal overlay --------------------------- */
 .doc-modal {
     position: fixed;
     inset: 0;
@@ -18,7 +18,7 @@
     cursor: pointer;
 }
 
-/* ── Document Preview Panel ─────────────────────── */
+/* -- Document Preview Panel ----------------------- */
 .doc-modal-panel {
     position: relative;
     z-index: 1;
@@ -32,8 +32,15 @@
 }
 
 @keyframes slideUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .doc-modal-header {
@@ -86,7 +93,7 @@
     background: var(--panel-bg);
 }
 
-/* ── Download prompt (non-previewable) ──────────── */
+/* -- Download prompt (non-previewable) ------------ */
 .doc-download-prompt {
     display: flex;
     flex-direction: column;
@@ -114,7 +121,7 @@
     max-width: 400px;
 }
 
-/* ── Document metadata grid ─────────────────────── */
+/* -- Document metadata grid ----------------------- */
 .doc-modal-meta {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -134,7 +141,7 @@
     color: var(--text-main);
 }
 
-/* ── Upload / Access modal panel ────────────────── */
+/* -- Upload / Access modal panel ------------------ */
 .upload-modal-panel {
     background: var(--panel-bg);
     border: 1px solid var(--glass-border);
@@ -167,7 +174,7 @@
     flex-shrink: 0;
 }
 
-/* ── Form groups inside modals ──────────────────── */
+/* -- Form groups inside modals -------------------- */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -195,7 +202,7 @@
     min-height: 70px;
 }
 
-/* ── File drop zone ─────────────────────────────── */
+/* -- File drop zone ------------------------------- */
 .file-drop-zone {
     border: 2px dashed var(--glass-border);
     border-radius: 10px;
@@ -225,7 +232,7 @@
     word-break: break-all;
 }
 
-/* ── Access toggle buttons ──────────────────────── */
+/* -- Access toggle buttons ------------------------ */
 .access-toggle {
     display: flex;
     gap: 0.5rem;
@@ -264,7 +271,7 @@
     display: flex;
 }
 
-/* ── Tag multi-select (group checkboxes) ────────── */
+/* -- Tag multi-select (group checkboxes) ---------- */
 .tag-select-wrap {
     background: var(--hover-bg);
     border: 1px solid var(--glass-border);
@@ -285,7 +292,9 @@
     transition: background 0.15s;
 }
 
-.tag-item:hover { background: var(--hover-bg); }
+.tag-item:hover {
+    background: var(--hover-bg);
+}
 
 .tag-item input[type="checkbox"] {
     margin-right: 0.5rem;

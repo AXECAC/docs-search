@@ -1,7 +1,7 @@
 """
-app/groups.py — управление группами доступа.
-Создание/удаление групп и управление участниками — только для admin.
-Просмотр списка групп — для всех авторизованных пользователей.
+app/groups.py - управление группами доступа.
+Создание/удаление групп и управление участниками - только для admin.
+Просмотр списка групп - для всех авторизованных пользователей.
 """
 import uuid
 import logging
@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/groups", tags=["groups"])
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Вспомогательные функции
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != "admin":
@@ -38,9 +38,9 @@ async def get_user_group_ids(user_id: uuid.UUID, db: AsyncSession) -> list[str]:
     return [str(row[0]) for row in result.fetchall()]
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Группы CRUD
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 @router.get("", response_model=list[GroupResponse])
 async def list_groups(
@@ -50,7 +50,7 @@ async def list_groups(
     """
     Список групп.
     Администраторы видят все группы.
-    Обычные пользователи — только те группы, в которых они состоят.
+    Обычные пользователи - только те группы, в которых они состоят.
     """
     if current_user.role == "admin":
         stmt = select(Group).order_by(Group.name)
@@ -127,9 +127,9 @@ async def delete_group(
     return {"status": "deleted"}
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Участники групп
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 @router.get("/{group_id}/members", response_model=list[UserSearchResult])
 async def get_group_members(

@@ -1,5 +1,5 @@
 """
-app/auth.py — Аутентификация: JWT (access + refresh), хэширование паролей,
+app/auth.py - Аутентификация: JWT (access + refresh), хэширование паролей,
 зависимости FastAPI и роутер /auth.
 """
 import os
@@ -26,9 +26,9 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Конфигурация из переменных окружения
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 REFRESH_SECRET_KEY = os.getenv("JWT_REFRESH_SECRET_KEY")
@@ -51,9 +51,9 @@ if not REFRESH_SECRET_KEY:
     )
     REFRESH_SECRET_KEY = "dev-refresh-secret-please-set-in-env"
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Хэширование паролей (bcrypt напрямую, без passlib)
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 def get_password_hash(password: str) -> str:
     """Возвращает bcrypt-хэш пароля."""
@@ -70,9 +70,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     )
 
 
-# ──────────────────────────────────────────
-# JWT — создание и декодирование
-# ──────────────────────────────────────────
+# ------------------------------------------
+# JWT - создание и декодирование
+# ------------------------------------------
 
 def create_access_token(data: dict) -> str:
     """
@@ -118,9 +118,9 @@ def decode_refresh_token(token: str) -> dict:
     return payload
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # FastAPI Dependencies
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -158,7 +158,7 @@ async def get_current_admin(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """
-    Dependency: проверяет, что текущий пользователь — admin.
+    Dependency: проверяет, что текущий пользователь - admin.
     Выбрасывает 403, если нет.
     """
     if current_user.role != "admin":
@@ -169,9 +169,9 @@ async def get_current_admin(
     return current_user
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Роутер /auth
-# ──────────────────────────────────────────
+# ------------------------------------------
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -183,9 +183,9 @@ async def register(
 ):
     """
     Регистрация нового пользователя.
-    - Если username совпадает с ADMIN_USERNAME и пароль совпадает с ADMIN_PASSWORD —
+    - Если username совпадает с ADMIN_USERNAME и пароль совпадает с ADMIN_PASSWORD -
       роль будет 'admin'.
-    - Иначе — роль 'user'.
+    - Иначе - роль 'user'.
     """
     # Проверяем уникальность имени
     result = await db.execute(select(User).where(User.username == body.username))
@@ -294,8 +294,8 @@ async def search_users(
 ):
     """
     Поиск пользователей. Только для admin.
-    q        — фильтр по username (ILIKE)
-    group_id — вернуть только членов определённой группы
+    q        - фильтр по username (ILIKE)
+    group_id - вернуть только членов определённой группы
     """
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")

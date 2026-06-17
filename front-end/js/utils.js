@@ -1,6 +1,6 @@
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Utility: Toasts
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
@@ -13,9 +13,9 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Utility: Formatting and HTML Escaping
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 function escapeHtml(str) {
     if (!str) return '';
     return String(str)
@@ -33,9 +33,9 @@ function formatBytes(bytes, decimals = 2) {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Utility: API Fetch with Token Interceptor
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 async function apiFetch(endpoint, options = {}) {
     const token = localStorage.getItem('access_token');
     const headers = { ...options.headers };

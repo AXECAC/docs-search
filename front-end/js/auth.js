@@ -1,6 +1,6 @@
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Auth Functions
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 async function refreshToken() {
     const refresh = localStorage.getItem('refresh_token');
     if (!refresh) return false;
@@ -29,7 +29,7 @@ function logout() {
     state.documents = [];
     state.groups = [];
     state.docsPagination = { total: 0, page: 1, pages: 1, page_size: 12 };
-    
+
     if (typeof docsCurrentPage !== 'undefined') docsCurrentPage = 1;
     if (typeof docsFilterQuery !== 'undefined') docsFilterQuery = '';
 

@@ -1,5 +1,5 @@
 """
-app/search.py — Гибридный поиск: семантический (Qdrant) + по ключевым словам (PostgreSQL).
+app/search.py - Гибридный поиск: семантический (Qdrant) + по ключевым словам (PostgreSQL).
 """
 import logging
 from typing import List
@@ -34,7 +34,7 @@ async def hybrid_search(
     4. Объединяем, дедублицируем, сортируем по score и возвращаем top_k.
     """
 
-    # ── 1. Список доступных документов ───────────────────────────────────
+    # -- 1. Список доступных документов -----------------------------------
     if current_user.role == "admin":
         doc_result = await db.execute(select(Document))
     else:
@@ -69,7 +69,7 @@ async def hybrid_search(
     if not accessible_doc_ids:
         return []
 
-    # ── 2. Семантический поиск в Qdrant ──────────────────────────────────
+    # -- 2. Семантический поиск в Qdrant ----------------------------------
     query_embedding = get_embedding(query)
     qdrant_results = semantic_search(query_embedding, top_k=top_k * 3)
 
@@ -87,7 +87,7 @@ async def hybrid_search(
                 "score": float(hit.get("score", 0.0)),
             }
 
-    # ── 3. Поиск по ключевым словам в PostgreSQL ─────────────────────────
+    # -- 3. Поиск по ключевым словам в PostgreSQL -------------------------
     # Извлекаем слова из запроса (≥3 символа) для простого keyword-поиска
     query_words = [w.lower() for w in query.split() if len(w) >= 3]
 
@@ -127,7 +127,7 @@ async def hybrid_search(
                     "score": kw_score * 0.5,  # масштабируем, чтобы не перекрыть семантику
                 }
 
-    # ── 4. Объединение результатов ────────────────────────────────────────
+    # -- 4. Объединение результатов ----------------------------------------
     merged: dict[str, dict] = {}
 
     for chunk_id, hit in semantic_hits.items():
@@ -135,12 +135,12 @@ async def hybrid_search(
 
     for chunk_id, hit in keyword_hits.items():
         if chunk_id in merged:
-            # Если чанк найден обоими методами — суммируем score
+            # Если чанк найден обоими методами - суммируем score
             merged[chunk_id]["score"] += hit["score"]
         else:
             merged[chunk_id] = dict(hit)
 
-    # ── 5. Обогащаем заголовком и расширением документа ──────────────────
+    # -- 5. Обогащаем заголовком и расширением документа ------------------
     results: List[SearchResultItem] = []
     for hit in merged.values():
         doc = doc_lookup.get(hit["document_id"])

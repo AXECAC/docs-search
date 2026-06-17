@@ -7,9 +7,9 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 
 
-# ──────────────────────────────────────────
+# ------------------------------------------
 # Ассоциативная таблица User ↔ Group
-# ──────────────────────────────────────────
+# ------------------------------------------
 user_groups = Table(
     "user_groups",
     Base.metadata,

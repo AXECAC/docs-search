@@ -1,6 +1,6 @@
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Initialization and Global Event Listeners
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 
 function switchTab(tabName) {
     state.activeTab = tabName;
@@ -51,9 +51,9 @@ function render() {
 }
 window.render = render;
 
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 // Event Listeners Registration
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
 
     // Chat form submit
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Create Group button
     document.getElementById('create-group-btn')?.addEventListener('click', () => {
-        if(typeof openCreateGroupModal === 'function') {
+        if (typeof openCreateGroupModal === 'function') {
             openCreateGroupModal();
         }
     });
