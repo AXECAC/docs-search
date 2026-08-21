@@ -1,7 +1,13 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+bin/
+include/
+lib/
+*lib64*
 target/
-*.so
-_rels/
-docProps/
-media/
-word/
-*.xml
+share/
+.env*
+pyvenv.cfg
+tree.txt
+*__pycache__*
+uploads/*
+report/

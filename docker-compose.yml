@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg15 # используем готовый образ с pgvector (опционально, но можно оставить обычный postgres, если pgvector не нужен)
+    container_name: docs_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: docs_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d docs_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - docs_network
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: docs_qdrant
+    ports:
+      - "6333:6333" # REST API
+      - "6334:6334" # gRPC API (опционально)
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    networks:
+      - docs_network
+  # solr временно отключаем (можно закомментировать или удалить)
+  # solr: ...
+
+volumes:
+  postgres_data:
+  qdrant_storage:
+
+networks:
+  docs_network:
+    driver: bridge

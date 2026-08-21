@@ -1,0 +1,51 @@
+:root {
+    /* Brand Colors (Common) */
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --danger: #ef4444;
+    --success: #10b981;
+
+    /* Light Theme (Default) */
+    --bg-color: #f8fafc;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --panel-bg: #ffffff;
+    --hover-bg: rgba(0, 0, 0, 0.05);
+    --input-bg: rgba(0, 0, 0, 0.05);
+    --backdrop-bg: rgba(0, 0, 0, 0.3);
+    
+    /* Accents (Light) */
+    --accent-text: #4f46e5;
+    --accent-bg: rgba(99, 102, 241, 0.1);
+    --accent-border: rgba(99, 102, 241, 0.2);
+    
+    --header-bg: rgba(248, 250, 252, 0.8);
+    --danger-bg: rgba(239, 68, 68, 0.1);
+    --danger-text: #dc2626;
+    --danger-border: rgba(239, 68, 68, 0.2);
+}
+
+[data-theme="dark"] {
+    /* Dark Theme */
+    --bg-color: #0f172a;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --panel-bg: #1e1e2e;
+    --hover-bg: rgba(255, 255, 255, 0.05);
+    --input-bg: rgba(0, 0, 0, 0.2);
+    --backdrop-bg: rgba(0, 0, 0, 0.7);
+    
+    /* Accents (Dark) */
+    --accent-text: #818cf8;
+    --accent-bg: rgba(99, 102, 241, 0.15);
+    --accent-border: rgba(99, 102, 241, 0.3);
+    
+    --header-bg: rgba(15, 23, 42, 0.5);
+    --danger-bg: rgba(239, 68, 68, 0.2);
+    --danger-text: #fca5a5;
+    --danger-border: rgba(239, 68, 68, 0.3);
+}

@@ -1,0 +1,193 @@
+/* Buttons */
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--glass-border);
+}
+
+.btn-outline:hover {
+    background: var(--hover-bg);
+}
+
+.btn-danger {
+    background: var(--danger-bg);
+    color: var(--danger-text);
+    border: 1px solid var(--danger-border);
+}
+
+.btn-danger:hover {
+    background: var(--danger-border);
+}
+
+/* Badge */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: var(--hover-bg);
+}
+
+/* Toasts */
+#toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 1000;
+}
+
+.toast {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    animation: slideIn 0.3s ease forwards;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toast.success { background: var(--success); color: #fff; }
+.toast.error   { background: var(--danger);  color: #fff; }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0);   opacity: 1; }
+}
+
+/* Spinner */
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s ease infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Input control (shared) */
+.input-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.input-control:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* User chips */
+.user-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    color: var(--accent-text);
+    border-radius: 99px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+.chip .chip-remove {
+    cursor: pointer;
+    opacity: 0.7;
+    font-size: 0.7rem;
+}
+
+.chip .chip-remove:hover { opacity: 1; }
+
+/* Source link */
+.source-link {
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.15s ease;
+}
+
+.source-link:hover {
+    color: var(--accent-text);
+}
+
+/* Dropdown for user search */
+.search-results-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--panel-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 200;
+}
+
+.search-results-dropdown .dropdown-item {
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.15s;
+}
+
+.search-results-dropdown .dropdown-item:hover {
+    background: var(--hover-bg);
+}
+
+.search-wrap {
+    position: relative;
+    flex: 1;
+}
+
+.user-search-row {
+    display: flex;
+    gap: 0.5rem;
+}

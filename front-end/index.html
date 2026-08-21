@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Docs Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/documents.css">
+    <link rel="stylesheet" href="css/search.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="css/modals.css">
+    <link rel="stylesheet" href="css/groups.css">
+    <script src="js/theme.js"></script>
+</head>
+<body>
+
+    <header>
+        <div class="logo">DocsSearch</div>
+        <nav class="tab-nav" id="tab-nav" style="display: none;">
+            <button class="tab-btn active" data-tab="dashboard">Документы</button>
+            <button class="tab-btn" data-tab="search">Поиск</button>
+            <button class="tab-btn" data-tab="chat">ИИ-Чат</button>
+            <button class="tab-btn admin-only" data-tab="groups" style="display:none;">Группы</button>
+        </nav>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <div class="nav-actions" id="nav-actions">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="global-actions">
+                <button class="btn btn-outline" id="theme-toggle-btn" onclick="toggleTheme()" style="padding: 0.4rem 0.6rem; font-size: 0.9rem; border: none; background: transparent; cursor: pointer;" title="Toggle Theme">
+                    Тема
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Auth View -->
+        <div id="auth-view" class="view active glass auth-container">
+            <h2 id="auth-title">Вход</h2>
+            <form id="auth-form">
+                <div class="input-group">
+                    <label>Имя пользователя</label>
+                    <input type="text" id="username" class="input-control" required autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label>Пароль</label>
+                    <input type="password" id="password" class="input-control" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="auth-submit">Войти</button>
+            </form>
+            <div class="auth-toggle" id="auth-toggle">Нет аккаунта? Зарегистрируйтесь</div>
+        </div>
+
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view">
+            <div class="dashboard-header">
+                <h2>Ваши документы</h2>
+                <button class="btn btn-primary" id="open-upload-modal-btn">
+                    + Загрузить файл
+                </button>
+            </div>
+
+            <div class="docs-search-bar">
+                <input type="text" id="docs-filter-input" class="input-control"
+                    placeholder="Поиск по названию..." oninput="onDocsFilter(this.value)"
+                    style="max-width: 400px;">
+            </div>
+
+            <div class="docs-grid" id="docs-grid">
+                <!-- Documents injected here -->
+            </div>
+
+            <div id="docs-pagination" class="docs-pagination"></div>
+        </div>
+
+        <!-- Search View -->
+        <div id="search-view" class="view">
+            <div class="dashboard-header">
+                <h2>Поиск по документам</h2>
+            </div>
+
+            <form id="search-form" class="search-bar glass">
+                <input
+                    type="text"
+                    id="search-input"
+                    class="search-input"
+                    placeholder="Поиск по тексту документов..."
+                    autocomplete="off"
+                >
+                <button type="submit" class="btn btn-primary search-btn">Найти</button>
+            </form>
+
+            <div id="search-state" class="search-state" style="display:none;"></div>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <!-- Groups View (admin only) -->
+        <div id="groups-view" class="view">
+            <div class="dashboard-header">
+                <h2>Управление группами</h2>
+                <button class="btn btn-primary" id="create-group-btn">+ Новая группа</button>
+            </div>
+            <div id="groups-list" class="groups-list">
+                <!-- Groups rendered here -->
+            </div>
+        </div>
+
+        <!-- Chat View -->
+        <div id="chat-view" class="view chat-view">
+            <div class="dashboard-header" style="margin-bottom: 1rem;">
+                <h2>ИИ-Ассистент</h2>
+            </div>
+            
+            <div class="chat-container glass">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-message assistant">
+                        <div class="message-content">Здравствуйте! Я ваш ИИ-ассистент. Задайте мне вопрос по загруженным корпоративным документам.</div>
+                    </div>
+                </div>
+                
+                <form id="chat-form" class="chat-input-area">
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        class="search-input" 
+                        placeholder="Задайте вопрос..." 
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="submit" class="btn btn-primary search-btn" id="chat-submit-btn">Отправить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <!-- Document Preview Modal -->
+    <div id="doc-modal" class="doc-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="doc-modal-backdrop" onclick="closeDocModal()"></div>
+        <div class="doc-modal-panel glass">
+            <div class="doc-modal-header">
+                <div class="doc-modal-title-wrap">
+                    <span class="doc-modal-icon" id="modal-icon">📄</span>
+                    <span class="doc-modal-title" id="modal-title">Документ</span>
+                </div>
+                <div class="doc-modal-actions">
+                    <a id="modal-download-btn" class="btn btn-outline" href="#" download>Скачать</a>
+                    <button class="btn btn-outline" onclick="closeDocModal()">Закрыть</button>
+                </div>
+            </div>
+            <div class="doc-modal-body" id="modal-body">
+                <!-- iframe or download prompt injected here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="upload-modal" class="doc-modal" style="display:none;"></div>
+    <div id="group-modal" class="doc-modal" style="display:none;" role="dialog" aria-modal="true"></div>
+
+    <script src="js/state.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/documents.js"></script>
+    <script src="js/doc-access.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/groups.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
