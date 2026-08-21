@@ -40,10 +40,8 @@ pub(crate) fn get_info_from_xml_rels<R: std::io::BufRead>(
                         match attr.key.as_ref() {
                             b"Id" => id = Some(attr.unescape_value()?),
                             b"Target" => target = Some(attr.unescape_value()?),
-                            b"Type" => {
-                                if attr.value.as_ref().ends_with(b"/image") {
-                                    is_image = true;
-                                }
+                            b"Type" if attr.value.as_ref().ends_with(b"/image") => {
+                                is_image = true;
                             }
 
                             _ => {}
